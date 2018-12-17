@@ -7,6 +7,7 @@ import moment = require('moment');
 import sql = require('mssql');
 import passHash = require('password-hash');
 import { resolve } from "url";
+import { rejects } from "assert";
 
 export class Authentication implements IAuthentication {
     validateLogin(user: string, password: string) {
@@ -58,50 +59,21 @@ export class Authentication implements IAuthentication {
 
     register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string): ActivityResponse {
         let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
+        var temp: ActivityResponse;
         if (result.error === null) {
-            this.checkUser(result.value.mobileNumber, result.value.emailAddress)
-                .then((res) => {
-                    if (res) {
-                        let DOB: Date = moment(result.value.dateOfBirth, 'DD-MM-YYYY').toDate()
-                        let passwordHash = passHash.generate(result.value.password)
-                        let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
-                                             VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`
-                        let request = new sql.Request();
-                        request.input('firstName', result.value.firstName)
-                        request.input('lastName', result.value.lastName)
-                        request.input('otherName', result.value.otherName)
-                        request.input('mobileNumber', result.value.mobileNumber)
-                        request.input('emailAddress', result.value.emailAddress)
-                        request.input('country', result.value.country)
-                        request.input('dateOfBirth', DOB)
-                        request.input('gender', result.value.gender)
-                        request.input('nationality', result.value.nationality)
-                        request.input('nationalID', result.value.nationalID)
-                        request.input('passwordHash', result.value.passwordHash)
-
-                        request.query(query);
-                        return {
-                            type: 'success',
-                        }
-                    } else {
-                       return {
-                            type: 'validation-error',
-                            reason: "User Exists already"
-                            }
-                    }
-                })
-                return {
-                    type: 'success'
-                }
+             this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
+                .then((res) => { temp = res })
+                .catch((error) => { temp = error })
+               return temp
         } else {
             return {
                 type: 'validation-error',
-                reason: "Validation Error{" + result.error + "} Or user Exists already"
+                reason: result.error
             }
         }
     }
 
-    async checkUser(mobileNumber: string, emailAddress: string) {
+    async addUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string): Promise<ActivityResponse>{
         let query: string = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@mobileNumber OR EMAILADDRESS=@emailAddress`
         let request = new sql.Request();
         request.input('mobileNumber', mobileNumber)
@@ -109,15 +81,35 @@ export class Authentication implements IAuthentication {
         var temp = await request.query(query)
         let userExists: boolean;
         let results = temp.recordsets[0];
-        if (results.length === 0) {
-            userExists = true;
-            return userExists;
-        }
-        else {
-            userExists = false;
-            return userExists;
-        }
-       
+        return new Promise<ActivityResponse>(async (resolve, reject) => {
+            if (results.length === 0) {
+                let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate()
+                let passwordHash = passHash.generate(password)
+                let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                                    VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`
+                let request = new sql.Request();
+                request.input('firstName', firstName)
+                request.input('lastName', lastName)
+                request.input('otherName', otherName)
+                request.input('mobileNumber', mobileNumber)
+                request.input('emailAddress', emailAddress)
+                request.input('country', country)
+                request.input('dateOfBirth', DOB)
+                request.input('gender', gender)
+                request.input('nationality', nationality)
+                request.input('nationalID', nationalID)
+                request.input('passwordHash', passwordHash)
+
+                await request.query(query);
+                resolve({ type: 'success'});
+            }
+            else {
+                reject({
+                    type: 'validation-error',
+                    reason: "User Exists already"
+                })
+            }
+        })
     }
 
     login(user: string, password: string): ActivityResponse {

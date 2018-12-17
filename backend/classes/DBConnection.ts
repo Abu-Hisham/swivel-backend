@@ -30,5 +30,5 @@ const dbconnection = sql['connect']({
     }
 
 })
-export { dbconnection as DBmessageHandler }
+export { dbconnection as DBmessageHdler }
 // export { pool1 as ConnectionPool }

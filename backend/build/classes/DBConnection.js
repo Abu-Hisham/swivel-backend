@@ -30,5 +30,5 @@ const dbconnection = sql['connect']({
         // console.log(msg.contactForm("Abdul Aziz", "abdul@ekenya.co.ke", "My subject", "Here's my Message", "0701633018"))
     }
 });
-exports.DBmessageHandler = dbconnection;
+exports.DBmessageHdler = dbconnection;
 // export { pool1 as ConnectionPool }
