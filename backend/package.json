@@ -1,0 +1,27 @@
+{
+  "name": "swivel-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node build/index.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@types/mssql": "^4.0.10",
+    "@types/node": "^10.12.10",
+    "@types/password-hash": "^1.2.20",
+    "colors": "^1.3.2",
+    "express": "^4.16.4",
+    "joi": "^14.3.0",
+    "joi-date-extensions": "^1.2.0",
+    "moment": "^2.22.2",
+    "mssql": "^5.0.0-alpha.1",
+    "password-hash": "^1.2.2",
+    "pg": "^7.6.1",
+    "reflect-metadata": "^0.1.12",
+    "typeorm": "^0.2.9"
+  },
+  "devDependencies": {
+    "@types/joi": "^14.0.0"
+  }
+}
