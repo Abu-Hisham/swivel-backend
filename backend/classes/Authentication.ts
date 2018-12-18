@@ -72,8 +72,6 @@ export class Authentication implements IAuthentication {
                     temp = error 
                     return temp
                 })
-
-
                  
         } else {
             return {
