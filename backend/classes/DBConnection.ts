@@ -28,7 +28,6 @@ const dbconnection = sql['connect']({
         // console.log(usr.login("0701633010", "Zizahry@123"))
         // console.log(msg.contactForm("Abdul Aziz", "abdul@ekenya.co.ke", "My subject", "Here's my Message", "0701633018"))
     }
-
 })
 export { dbconnection as DBmessageHdler }
 // export { pool1 as ConnectionPool }
