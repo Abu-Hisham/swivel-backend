@@ -57,24 +57,13 @@ export class Authentication implements IAuthentication {
         return result;
     }
 
-    register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string): ActivityResponse {
+    async register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string){
         let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
-        var temp: ActivityResponse;
         if (result.error === null) {
-            this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
-                .then((res) => 
-                { 
-                    temp = res
-                    return temp
-                })
-                .catch((error) => 
-                { 
-                    temp = error 
-                    return temp
-                })
-
-
-                 
+           var temp = await this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
+                .then()
+                .catch((error)=>{error})
+            return temp     
         } else {
             return {
                 type: 'validation-error',

@@ -59,27 +59,21 @@ class Authentication {
         return result;
     }
     register(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm) {
-        let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm);
-        var temp;
-        if (result.error === null) {
-            var ut = this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
-                .then((res) => {
-                temp = res;
-                // return temp
-            })
-                .catch((error) => {
-                temp = error;
-                // return temp
-            });
-            console.log('Result');
-            console.log(ut);
-        }
-        else {
-            return {
-                type: 'validation-error',
-                reason: result.error
-            };
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm);
+            if (result.error === null) {
+                var temp = yield this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
+                    .then()
+                    .catch((error) => { error; });
+                return temp;
+            }
+            else {
+                return {
+                    type: 'validation-error',
+                    reason: result.error
+                };
+            }
+        });
     }
     addUser(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password) {
         return __awaiter(this, void 0, void 0, function* () {
