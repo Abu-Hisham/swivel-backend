@@ -57,13 +57,13 @@ export class Authentication implements IAuthentication {
         return result;
     }
 
-    async register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string){
+    async register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string) {
         let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
         if (result.error === null) {
-           var temp = await this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
-                .then((result)=>{console.log(result)})
-                .catch((error)=>{console.log(error)})
-            return temp     
+            var temp = await this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
+                .then((result) => { console.log(result) })
+                .catch((error) => { console.log(error) })
+            return temp
         } else {
             return {
                 type: 'validation-error',
@@ -72,7 +72,7 @@ export class Authentication implements IAuthentication {
         }
     }
 
-    async addUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string): Promise<ActivityResponse>{
+    async addUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string): Promise<ActivityResponse> {
         let query: string = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@mobileNumber OR EMAILADDRESS=@emailAddress`
         let request = new sql.Request();
         request.input('mobileNumber', mobileNumber)
@@ -100,7 +100,7 @@ export class Authentication implements IAuthentication {
                 request.input('passwordHash', passwordHash)
 
                 await request.query(query);
-                resolve({ type: 'success'});
+                resolve({ type: 'success' });
             }
             else {
                 reject({
@@ -111,24 +111,10 @@ export class Authentication implements IAuthentication {
         })
     }
 
-    login(user: string, password: string): ActivityResponse {
+    async login(user: string, password: string) {
         let result = this.validateLogin(user, password)
         if (result.error === null) {
-            let query: string = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
-            let request = new sql.Request();
-            request.input('user', result.value.user)
-            request.query(query, (err, resultset) => {
-                if (resultset.recordset.length != 0 && passHash.verify(result.value.password, resultset.recordset[0]['PASSWORD'])) {
-                    return {
-                        type: 'success'
-                    }
-                } else {
-                    return {
-                        type: 'validation-error',
-                        reason: 'Wrong Credentials'
-                    }
-                }
-            });
+            return await this.checkUser(result.value.user, result.value.password).then().catch() 
         } else {
             return {
                 type: 'validation-error',
@@ -137,6 +123,23 @@ export class Authentication implements IAuthentication {
         }
     }
 
+    async checkUser(user: string, password: string){
+        let validUser: boolean;
+        let query: string = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
+        let request = new sql.Request();
+        request.input('user', user)
+        let results = await request.query(query);
+        return new Promise<ActivityResponse>((resolve, reject)=>{
+            if (results.recordsets[0].length != 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
+                resolve({ type: 'success' })
+            } else {
+                reject({
+                    type: 'validation-error',
+                    reason: 'Wrong Credentials'
+                })
+            }
+        })
+    }
     forgotPassword(user: string): ActivityResponse {
         let result = this.validateForgotPassword(user)
         if (result.error === null) {

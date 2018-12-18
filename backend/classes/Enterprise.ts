@@ -6,7 +6,7 @@ import sql = require('mssql');
 
 export class Enterprise implements IKentaPayEnterprise {
     constructor() { }
-    validateInput(companyName: string, contactPersonsName: String, companyUrl: String, emailAddress: String, phoneNumber: String, county: String) {
+    validateInput(companyName: string, contactPersonsName: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string) {
         const schema = Joi.object().keys({
             companyName: Joi.string().min(5).regex(/^[A-Z a-z]+$/).required().replace(/\s{2,}/g, ' '),
             contactPersonsName: Joi.string().min(3).regex(/^[A-Z a-z]+$/).max(100).required().replace(/\s{2,}/g, ' '),
@@ -20,38 +20,13 @@ export class Enterprise implements IKentaPayEnterprise {
     }
 
 
-    corporate(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county): ActivityResponse {
+    async corporate(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county) {
         let result = this.validateInput(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county)
         const isCoporate = 1
         if (result.error == null) {
-            this.countyExists(county)
-                .then((res) => {
-                    if (res === true) {
-                        let query: string = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE]) 
-                                	         VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate);`
-                        let request = new sql.Request();
-                        request.input('companyName', result.value.companyName)
-                        request.input('contactPersonsName', result.value.contactPersonsName)
-                        request.input('companyUrl', result.value.companyUrl)
-                        request.input('emailAddress', result.value.emailAddress)
-                        request.input('phoneNumber', result.value.phoneNumber)
-                        request.input('county', result.value.county)
-                        request.input('isCorporate', sql.Bit, isCoporate)
-                        request.query(query, (err, resultset) => {
-                            if (resultset) {
-                                console.log('Query Successful', resultset)
-                            } else {
-                                console.log('Error in query', err)
-                                console.log(query)
-                            }
-                        })
-                    } else {
-                        console.log('County does not exist')
-                    }
-                })
-            return {
-                type: 'success'
-            };
+            let temp = await this.saveEnterprise(result.value.companyName, result.value.contactPersonsName, result.value.companyUrl, result.value.emailAddress, result.value.phoneNumber, result.value.county, isCoporate)
+                .then((res) => { console.log(res) }).catch((error) => { console.log(error) })
+            return temp
         }
         else {
             return {
@@ -61,54 +36,13 @@ export class Enterprise implements IKentaPayEnterprise {
         }
     }
 
-    async countyExists(county: string) {
-        let query = `SELECT * FROM TBCOUNTIES WHERE NAME=@county`
-        let request = new sql.Request();
-        var countyExists: boolean;
-        request.input('county', county);
-        let temp = await request.query(query);
-        let result = temp.recordsets
-        if (result.length === 0) {
-            countyExists = false;
-            return countyExists;
-        } else {
-            countyExists = true;
-            return countyExists;
-        }
-    }
-
-    merchant(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county): ActivityResponse {
+    async merchant(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county) {
         let result = this.validateInput(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county)
         const isCoporate = 0
         if (result.error == null) {
-            this.countyExists(county)
-                .then((res) => {
-                    if (res === true) {
-                        let query: string = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE]) 
-                                             VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber, (SELECT RCID FROM TBCOUNTIES WHERE NAME=@county),@isCorporate);`
-                        let request = new sql.Request();
-                        request.input('companyName', result.value.companyName)
-                        request.input('contactPersonsName', result.value.contactPersonsName)
-                        request.input('companyUrl', result.value.companyUrl)
-                        request.input('emailAddress', result.value.emailAddress)
-                        request.input('phoneNumber', result.value.phoneNumber)
-                        request.input('county', result.value.county)
-                        request.input('isCorporate', sql.Bit, isCoporate)
-                        request.query(query, (err, resultset) => {
-                            if (resultset) {
-                                console.log('Query Successful', resultset)
-                            } else {
-                                console.log('Error in query', err)
-                                console.log(query)
-                            }
-                        })
-                    } else {
-                        console.log('County does not exist')
-                    }
-                })
-            return {
-                type: 'success'
-            };
+            let temp = await this.saveEnterprise(result.value.companyName, result.value.contactPersonsName, result.value.companyUrl, result.value.emailAddress, result.value.phoneNumber, result.value.county, isCoporate)
+                .then().then().catch().catch()
+            return temp
         }
         else {
             return {
@@ -116,6 +50,54 @@ export class Enterprise implements IKentaPayEnterprise {
                 reason: result.error
             }
         }
+    }
 
+    async checkCounty(county: string) {
+        let query = `SELECT * FROM TBCOUNTIES WHERE NAME=@county`
+        let request = new sql.Request();
+        request.input('county', county);
+        let temp = await request.query(query);
+        let result = temp.recordsets
+        return new Promise<ActivityResponse>((resolve, reject) => {
+            if (result.length === 0) {
+                reject({
+                    type: 'validation-error',
+                    reason: 'County with the given name does not exist'
+                });
+            } else {
+                resolve({ type: 'success' });
+            }
+        })
+    }
+
+    async saveEnterprise(companyName: string, contactPersonsName: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, isCoporate: number) {
+        let query = `SELECT * FROM [TBENTERPRISE] WHERE COMPANYNAME=@companyName OR COMPANYURL=@companyUrl`
+        let request = new sql.Request();
+        request.input('companyName', companyName);
+        request.input('companyUrl', companyUrl);
+        let temp = await request.query(query);
+        let result = temp.recordsets[0];
+        let countyExist = await this.checkCounty(county)
+        return await new Promise<ActivityResponse>(async (resolve, reject) => {
+            if (result.length === 0 && countyExist.type === 'success') {
+                let query: string = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
+                                            VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`
+                let request = new sql.Request();
+                request.input('companyName', companyName);
+                request.input('contactPersonsName', contactPersonsName);
+                request.input('companyUrl', companyUrl);
+                request.input('emailAddress', emailAddress);
+                request.input('phoneNumber', phoneNumber);
+                request.input('county', county);
+                request.input('isCorporate', sql.Bit, isCoporate);
+                await request.query(query);
+                resolve({ type: 'success' })
+            } else {
+                reject({
+                    type: 'validation-error',
+                    reason: 'Company with the Name or Url already exists',
+                })
+            }
+        })
     }
 }

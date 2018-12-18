@@ -115,31 +115,38 @@ class Authentication {
         });
     }
     login(user, password) {
-        let result = this.validateLogin(user, password);
-        if (result.error === null) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let result = this.validateLogin(user, password);
+            if (result.error === null) {
+                return yield this.checkUser(result.value.user, result.value.password).then().catch();
+            }
+            else {
+                return {
+                    type: 'validation-error',
+                    reason: result.error
+                };
+            }
+        });
+    }
+    checkUser(user, password) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let validUser;
             let query = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
             let request = new sql.Request();
-            request.input('user', result.value.user);
-            request.query(query, (err, resultset) => {
-                if (resultset.recordset.length != 0 && passHash.verify(result.value.password, resultset.recordset[0]['PASSWORD'])) {
-                    return {
-                        type: 'success'
-                    };
+            request.input('user', user);
+            let results = yield request.query(query);
+            return new Promise((resolve, reject) => {
+                if (results.recordsets[0].length !== 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
+                    resolve({ type: 'success' });
                 }
                 else {
-                    return {
+                    reject({
                         type: 'validation-error',
                         reason: 'Wrong Credentials'
-                    };
+                    });
                 }
             });
-        }
-        else {
-            return {
-                type: 'validation-error',
-                reason: result.error
-            };
-        }
+        });
     }
     forgotPassword(user) {
         let result = this.validateForgotPassword(user);
