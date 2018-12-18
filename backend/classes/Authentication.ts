@@ -57,10 +57,10 @@ export class Authentication implements IAuthentication {
         return result;
     }
 
-    register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string): ActivityResponse {
+    async register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string){
         let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
-        var temp: ActivityResponse;
         if (result.error === null) {
+<<<<<<< HEAD
             this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
                 .then((res) => 
                 { 
@@ -73,6 +73,12 @@ export class Authentication implements IAuthentication {
                     return temp
                 })
                  
+=======
+           var temp = await this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
+                .then()
+                .catch((error)=>{error})
+            return temp     
+>>>>>>> 8d93eb98cd3732b4f3559c42ece64e8b44dd25e0
         } else {
             return {
                 type: 'validation-error',
