@@ -114,7 +114,8 @@ export class Authentication implements IAuthentication {
     async login(user: string, password: string) {
         let result = this.validateLogin(user, password)
         if (result.error === null) {
-            return await this.checkUser(result.value.user, result.value.password).then().catch() 
+            let temp = await this.checkUser(result.value.user, result.value.password).then().catch() 
+            return temp
         } else {
             return {
                 type: 'validation-error',
@@ -124,7 +125,6 @@ export class Authentication implements IAuthentication {
     }
 
     async checkUser(user: string, password: string){
-        let validUser: boolean;
         let query: string = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
         let request = new sql.Request();
         request.input('user', user)
