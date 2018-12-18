@@ -25,7 +25,7 @@ const dbconnection = sql['connect']({
         // console.log(ent.corporate("Eclectics", "Abdulaziz", "https://ekenya.co.ke", "hr@ekenya.co.ke", "0765223124", "Nakuru"));
         // console.log(usr.register("1234    yhu","@#$%%","^        ","hallo","abdul@ekenya.co.ke", "tanga","yes123", "g", "Kenyan","31672609","Zizahry@123", "Zizahry@123"));
         // console.log(usr.register("Patrick","James","Kimani","07016330  17","patrick@ekenya.co.ke", "Kenya","03-11-1991", "M", "Kenyan","31672610","Zizahry@123", "Zizahry@123"));
-        console.log(usr.register("Peter", "Mawira", "Kipkirui", "0701633018", "peter@ekenya.co.ke", "Kenya", "13-06-1993", "M", "Kenyan", "31672610", "Zizahry@123", "Zizahry@123"));
+        console.log(usr.register("Peter", "Mawira", "Kipkirui", "0701633012", "petr@ekenya.co.ke", "Kenya", "13-06-1993", "M", "Kenyan", "31672610", "Zizahry@123", "Zizahry@123"));
         // console.log(usr.login("0701633010", "Zizahry@123"))
         // console.log(msg.contactForm("Abdul Aziz", "abdul@ekenya.co.ke", "My subject", "Here's my Message", "0701633018"))
     }

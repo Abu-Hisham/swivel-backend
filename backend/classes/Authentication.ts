@@ -61,8 +61,8 @@ export class Authentication implements IAuthentication {
         let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
         if (result.error === null) {
            var temp = await this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
-                .then()
-                .catch((error)=>{error})
+                .then((result)=>{console.log(result)})
+                .catch((error)=>{console.log(error)})
             return temp     
         } else {
             return {
