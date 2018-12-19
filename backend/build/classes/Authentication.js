@@ -82,7 +82,6 @@ class Authentication {
             request.input('mobileNumber', mobileNumber);
             request.input('emailAddress', emailAddress);
             var temp = yield request.query(query);
-            let userExists;
             let results = temp.recordsets[0];
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 if (results.length === 0) {
