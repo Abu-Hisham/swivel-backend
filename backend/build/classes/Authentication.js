@@ -118,7 +118,7 @@ class Authentication {
         return __awaiter(this, void 0, void 0, function* () {
             let result = this.validateLogin(user, password);
             if (result.error === null) {
-                let temp = yield this.checkUser(result.value.user, result.value.password).then().catch();
+                let temp = yield this.checkUser(result.value.user, result.value.password).then((res) => { console.log(res); }).catch((err) => { console.log(err); });
                 return temp;
             }
             else {

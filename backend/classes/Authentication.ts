@@ -6,8 +6,6 @@ const Joi = BaseJoi.extend(Extension);
 import moment = require('moment');
 import sql = require('mssql');
 import passHash = require('password-hash');
-import { resolve } from "url";
-import { rejects } from "assert";
 
 export class Authentication implements IAuthentication {
     validateLogin(user: string, password: string) {
@@ -78,7 +76,6 @@ export class Authentication implements IAuthentication {
         request.input('mobileNumber', mobileNumber)
         request.input('emailAddress', emailAddress)
         var temp = await request.query(query)
-        let userExists: boolean;
         let results = temp.recordsets[0];
         return new Promise<ActivityResponse>(async (resolve, reject) => {
             if (results.length === 0) {
@@ -114,7 +111,7 @@ export class Authentication implements IAuthentication {
     async login(user: string, password: string) {
         let result = this.validateLogin(user, password)
         if (result.error === null) {
-            let temp = await this.checkUser(result.value.user, result.value.password).then().catch() 
+            let temp = await this.checkUser(result.value.user, result.value.password).then((res)=>{console.log(res)}).catch((err)=>{console.log(err)}) 
             return temp
         } else {
             return {
