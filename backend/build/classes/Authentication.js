@@ -77,15 +77,35 @@ class Authentication {
     }
     addUser(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber) OR (EMAILADDRESS=@emailAddress) OR (IDENTIFICATIONID=@nationalID)`;
+            let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`;
+            let query1 = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`;
+            let query2 = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`;
             let request = new sql.Request();
             request.input('mobileNumber', mobileNumber);
             request.input('emailAddress', emailAddress);
             request.input('nationalID', nationalID);
             var temp = yield request.query(query);
-            let results = temp.recordsets[0];
+            var temp1 = yield request.query(query1);
+            var temp2 = yield request.query(query2);
+            let error_msg = ['', '', ''];
+            let index = 0;
+            if (temp.recordsets[0].length > 0) {
+                let msg = `Mobile Number ${mobileNumber}`;
+                error_msg[index] = msg;
+                index++;
+            }
+            if (temp1.recordsets[0].length > 0) {
+                let msg = `Email Address ${emailAddress}`;
+                error_msg[index] = msg;
+                index++;
+            }
+            if (temp2.recordsets[0].length > 0) {
+                let msg = `ID Number ${nationalID}`;
+                error_msg[index] = msg;
+                index++;
+            }
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                if (results.length === 0) {
+                if (index === 0) {
                     let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
                     let passwordHash = passHash.generate(password);
                     let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
@@ -106,9 +126,15 @@ class Authentication {
                     resolve({ type: 'success' });
                 }
                 else {
+                    let reason = '';
+                    error_msg.forEach((value) => {
+                        if (value) {
+                            reason += value + ',';
+                        }
+                    });
                     reject({
                         type: 'validation-error',
-                        reason: "User  with the ID_No|Email|Phone_No Exists"
+                        reason: 'User with ' + reason + ' Exists'
                     });
                 }
             }));

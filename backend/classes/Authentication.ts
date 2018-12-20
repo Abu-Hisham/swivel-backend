@@ -71,15 +71,36 @@ export class Authentication implements IAuthentication {
     }
 
     async addUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string): Promise<ActivityResponse> {
-        let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber) OR (EMAILADDRESS=@emailAddress) OR (IDENTIFICATIONID=@nationalID)`
+        let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`
+        let query1: string = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`
+        let query2: string = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`
         let request = new sql.Request();
         request.input('mobileNumber', mobileNumber)
         request.input('emailAddress', emailAddress)
         request.input('nationalID', nationalID)
         var temp = await request.query(query)
-        let results = temp.recordsets[0];
+        var temp1 = await request.query(query1)
+        var temp2 = await request.query(query2)
+        let error_msg: string[] = ['', '', '']
+        let index: number = 0
+        if (temp.recordsets[0].length > 0) {
+            let msg = `Mobile Number ${mobileNumber}`
+            error_msg[index] = msg
+            index++;
+        }
+        if (temp1.recordsets[0].length > 0) {
+            let msg = `Email Address ${emailAddress}`
+            error_msg[index] = msg
+            index++;
+        }
+        if (temp2.recordsets[0].length > 0) {
+            let msg = `ID Number ${nationalID}`
+            error_msg[index] = msg;
+            index++;
+        }
+
         return new Promise<ActivityResponse>(async (resolve, reject) => {
-            if (results.length === 0) {
+            if (index === 0) {
                 let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate()
                 let passwordHash = passHash.generate(password)
                 let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
@@ -101,9 +122,15 @@ export class Authentication implements IAuthentication {
                 resolve({ type: 'success' });
             }
             else {
+                let reason = ''
+                error_msg.forEach((value) => {
+                    if (value) {
+                        reason += value + ','
+                    }
+                })
                 reject({
                     type: 'validation-error',
-                    reason: "User  with the ID_No|Email|Phone_No Exists"
+                    reason: 'User with ' + reason + ' Exists'
                 })
             }
         })
@@ -112,7 +139,7 @@ export class Authentication implements IAuthentication {
     async login(user: string, password: string) {
         let result = this.validateLogin(user, password)
         if (result.error === null) {
-            let temp = await this.checkUser(result.value.user, result.value.password).then((res)=>{console.log(res)}).catch((err)=>{console.log(err)}) 
+            let temp = await this.checkUser(result.value.user, result.value.password).then((res) => { console.log(res) }).catch((err) => { console.log(err) })
             return temp
         } else {
             return {
@@ -122,12 +149,12 @@ export class Authentication implements IAuthentication {
         }
     }
 
-    async checkUser(user: string, password: string){
+    async checkUser(user: string, password: string) {
         let query: string = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
         let request = new sql.Request();
         request.input('user', user)
         let results = await request.query(query);
-        return new Promise<ActivityResponse>((resolve, reject)=>{
+        return new Promise<ActivityResponse>((resolve, reject) => {
             if (results.recordsets[0].length != 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
                 resolve({ type: 'success' })
             } else {
@@ -138,6 +165,7 @@ export class Authentication implements IAuthentication {
             }
         })
     }
+
     forgotPassword(user: string): ActivityResponse {
         let result = this.validateForgotPassword(user)
         if (result.error === null) {
