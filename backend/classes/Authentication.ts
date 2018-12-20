@@ -125,12 +125,12 @@ export class Authentication implements IAuthentication {
                 let reason = ''
                 error_msg.forEach((value) => {
                     if (value) {
-                        reason += value + ','
+                        reason += value + ', '
                     }
                 })
                 reject({
                     type: 'validation-error',
-                    reason: 'User with ' + reason + ' Exists'
+                    reason: 'User with ' + reason + ' Exist'
                 })
             }
         })
