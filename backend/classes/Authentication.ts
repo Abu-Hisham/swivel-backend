@@ -71,10 +71,11 @@ export class Authentication implements IAuthentication {
     }
 
     async addUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string): Promise<ActivityResponse> {
-        let query: string = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@mobileNumber OR EMAILADDRESS=@emailAddress`
+        let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber) OR (EMAILADDRESS=@emailAddress) OR (IDENTIFICATIONID=@nationalID)`
         let request = new sql.Request();
         request.input('mobileNumber', mobileNumber)
         request.input('emailAddress', emailAddress)
+        request.input('nationalID', nationalID)
         var temp = await request.query(query)
         let results = temp.recordsets[0];
         return new Promise<ActivityResponse>(async (resolve, reject) => {
@@ -102,7 +103,7 @@ export class Authentication implements IAuthentication {
             else {
                 reject({
                     type: 'validation-error',
-                    reason: "User Exists already"
+                    reason: "User  with the ID_No|Email|Phone_No Exists"
                 })
             }
         })

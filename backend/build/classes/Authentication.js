@@ -77,10 +77,11 @@ class Authentication {
     }
     addUser(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            let query = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@mobileNumber OR EMAILADDRESS=@emailAddress`;
+            let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber) OR (EMAILADDRESS=@emailAddress) OR (IDENTIFICATIONID=@nationalID)`;
             let request = new sql.Request();
             request.input('mobileNumber', mobileNumber);
             request.input('emailAddress', emailAddress);
+            request.input('nationalID', nationalID);
             var temp = yield request.query(query);
             let results = temp.recordsets[0];
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -107,7 +108,7 @@ class Authentication {
                 else {
                     reject({
                         type: 'validation-error',
-                        reason: "User Exists already"
+                        reason: "User  with the ID_No|Email|Phone_No Exists"
                     });
                 }
             }));
