@@ -41,7 +41,7 @@ export class Enterprise implements IKentaPayEnterprise {
         const isCoporate = 0
         if (result.error == null) {
             let temp = await this.saveEnterprise(result.value.companyName, result.value.contactPersonsName, result.value.companyUrl, result.value.emailAddress, result.value.phoneNumber, result.value.county, isCoporate)
-                .then().then().catch().catch()
+            .then((res) => { console.log(res) }).catch((error) => { console.log(error) })
             return temp
         }
         else {
