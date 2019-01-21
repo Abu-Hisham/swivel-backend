@@ -47,7 +47,7 @@ class Enterprise {
             const isCoporate = 0;
             if (result.error == null) {
                 let temp = yield this.saveEnterprise(result.value.companyName, result.value.contactPersonsName, result.value.companyUrl, result.value.emailAddress, result.value.phoneNumber, result.value.county, isCoporate)
-                    .then().then().catch().catch();
+                    .then((res) => { console.log(res); }).catch((error) => { console.log(error); });
                 return temp;
             }
             else {
@@ -65,17 +65,15 @@ class Enterprise {
             request.input('county', county);
             let temp = yield request.query(query);
             let result = temp.recordsets;
-            return new Promise((resolve, reject) => {
-                if (result.length === 0) {
-                    reject({
-                        type: 'validation-error',
-                        reason: 'County with the given name does not exist'
-                    });
-                }
-                else {
-                    resolve({ type: 'success' });
-                }
-            });
+            if (result.length === 0) {
+                throw {
+                    type: 'validation-error',
+                    reason: 'County with the given name does not exist'
+                };
+            }
+            else {
+                return { type: 'success' };
+            }
         });
     }
     saveEnterprise(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county, isCoporate) {
@@ -87,28 +85,26 @@ class Enterprise {
             let temp = yield request.query(query);
             let result = temp.recordsets[0];
             let countyExist = yield this.checkCounty(county);
-            return yield new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                if (result.length === 0 && countyExist.type === 'success') {
-                    let query = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
+            if (result.length === 0 && countyExist.type === 'success') {
+                let query = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
                                             VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`;
-                    let request = new sql.Request();
-                    request.input('companyName', companyName);
-                    request.input('contactPersonsName', contactPersonsName);
-                    request.input('companyUrl', companyUrl);
-                    request.input('emailAddress', emailAddress);
-                    request.input('phoneNumber', phoneNumber);
-                    request.input('county', county);
-                    request.input('isCorporate', sql.Bit, isCoporate);
-                    yield request.query(query);
-                    resolve({ type: 'success' });
-                }
-                else {
-                    reject({
-                        type: 'validation-error',
-                        reason: 'Company with the Name or Url already exists',
-                    });
-                }
-            }));
+                let request = new sql.Request();
+                request.input('companyName', companyName);
+                request.input('contactPersonsName', contactPersonsName);
+                request.input('companyUrl', companyUrl);
+                request.input('emailAddress', emailAddress);
+                request.input('phoneNumber', phoneNumber);
+                request.input('county', county);
+                request.input('isCorporate', sql.Bit, isCoporate);
+                yield request.query(query);
+                return { type: 'success' };
+            }
+            else {
+                throw {
+                    type: 'validation-error',
+                    reason: 'Company with the Name or Url already exists',
+                };
+            }
         });
     }
 }

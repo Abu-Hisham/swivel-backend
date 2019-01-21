@@ -104,40 +104,38 @@ class Authentication {
                 error_msg[index] = msg;
                 index++;
             }
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                if (index === 0) {
-                    let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
-                    let passwordHash = passHash.generate(password);
-                    let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+            if (index === 0) {
+                let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                let passwordHash = passHash.generate(password);
+                let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
                                     VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
-                    let request = new sql.Request();
-                    request.input('firstName', firstName);
-                    request.input('lastName', lastName);
-                    request.input('otherName', otherName);
-                    request.input('mobileNumber', mobileNumber);
-                    request.input('emailAddress', emailAddress);
-                    request.input('country', country);
-                    request.input('dateOfBirth', DOB);
-                    request.input('gender', gender);
-                    request.input('nationality', nationality);
-                    request.input('nationalID', nationalID);
-                    request.input('passwordHash', passwordHash);
-                    yield request.query(query);
-                    resolve({ type: 'success' });
-                }
-                else {
-                    let reason = '';
-                    error_msg.forEach((value) => {
-                        if (value) {
-                            reason += value + ', ';
-                        }
-                    });
-                    reject({
-                        type: 'validation-error',
-                        reason: 'User with ' + reason + ' Exist'
-                    });
-                }
-            }));
+                let request = new sql.Request();
+                request.input('firstName', firstName);
+                request.input('lastName', lastName);
+                request.input('otherName', otherName);
+                request.input('mobileNumber', mobileNumber);
+                request.input('emailAddress', emailAddress);
+                request.input('country', country);
+                request.input('dateOfBirth', DOB);
+                request.input('gender', gender);
+                request.input('nationality', nationality);
+                request.input('nationalID', nationalID);
+                request.input('passwordHash', passwordHash);
+                yield request.query(query);
+                return { type: 'success' };
+            }
+            else {
+                let reason = '';
+                error_msg.forEach((value) => {
+                    if (value) {
+                        reason += value + ', ';
+                    }
+                });
+                throw {
+                    type: 'validation-error',
+                    reason: 'User with ' + reason + ' Exist'
+                };
+            }
         });
     }
     login(user, password) {
@@ -161,17 +159,15 @@ class Authentication {
             let request = new sql.Request();
             request.input('user', user);
             let results = yield request.query(query);
-            return new Promise((resolve, reject) => {
-                if (results.recordsets[0].length != 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
-                    resolve({ type: 'success' });
-                }
-                else {
-                    reject({
-                        type: 'validation-error',
-                        reason: 'Wrong Credentials'
-                    });
-                }
-            });
+            if (results.recordsets[0].length != 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
+                return { type: 'success' };
+            }
+            else {
+                throw {
+                    type: 'validation-error',
+                    reason: 'Wrong Credentials'
+                };
+            }
         });
     }
     forgotPassword(user) {

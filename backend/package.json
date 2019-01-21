@@ -7,9 +7,6 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@types/mssql": "^4.0.10",
-    "@types/node": "^10.12.10",
-    "@types/password-hash": "^1.2.20",
     "colors": "^1.3.2",
     "express": "^4.16.4",
     "joi": "^14.3.0",
@@ -22,6 +19,9 @@
     "typeorm": "^0.2.9"
   },
   "devDependencies": {
-    "@types/joi": "^14.0.0"
+    "@types/joi": "^14.0.0",
+    "@types/mssql": "^4.0.11",
+    "@types/node": "^10.12.18",
+    "@types/password-hash": "^1.2.20"
   }
 }

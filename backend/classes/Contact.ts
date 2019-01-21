@@ -19,7 +19,7 @@ export class Contact implements IContactUs {
         return result
     }
 
-   contactForm(name: string, email: string, subject: string, message: string, user: string) {
+   contactForm(name: string, email: string, subject: string, message: string, user: string){
         let result = this.validateInput(name, email, subject, message, user)
         if (result.error === null) {
             return this.saveForm(result.value.name, result.value.email, result.value.subject, result.value.message, result.value.user).then().catch()
@@ -31,13 +31,11 @@ export class Contact implements IContactUs {
         }
     }
     async saveForm(name: string, email: string, subject: string, message: string, user: string): Promise<ActivityResponse> {
-        let userExists: boolean;
         let query: string = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
         let request = new sql.Request();
         request.input('user', user)
         var temp = await request.query(query)
         let results = temp.recordsets[0];
-        return new Promise<ActivityResponse>(async (reject, resolve) => {
             if (results.length === 0) {
                 let query: string = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
                                      VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`
@@ -48,14 +46,13 @@ export class Contact implements IContactUs {
                 request.input('message', message)
                 request.input('user', user)
                 await request.query(query);
-                resolve({ type: 'success' })
+                return { type: 'success' }
             }
             else {
-                reject({
+                throw {
                     type: 'validation-error',
                     reason: 'Invalid User'
-                })
+                }
             }
-        })
     }
 }

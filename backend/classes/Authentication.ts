@@ -98,8 +98,6 @@ export class Authentication implements IAuthentication {
             error_msg[index] = msg;
             index++;
         }
-
-        return new Promise<ActivityResponse>(async (resolve, reject) => {
             if (index === 0) {
                 let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate()
                 let passwordHash = passHash.generate(password)
@@ -119,7 +117,7 @@ export class Authentication implements IAuthentication {
                 request.input('passwordHash', passwordHash)
 
                 await request.query(query);
-                resolve({ type: 'success' });
+                return { type: 'success' };
             }
             else {
                 let reason = ''
@@ -128,12 +126,11 @@ export class Authentication implements IAuthentication {
                         reason += value + ', '
                     }
                 })
-                reject({
+                throw{
                     type: 'validation-error',
                     reason: 'User with ' + reason + ' Exist'
-                })
+                }
             }
-        })
     }
 
     async login(user: string, password: string) {
@@ -154,16 +151,14 @@ export class Authentication implements IAuthentication {
         let request = new sql.Request();
         request.input('user', user)
         let results = await request.query(query);
-        return new Promise<ActivityResponse>((resolve, reject) => {
             if (results.recordsets[0].length != 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
-                resolve({ type: 'success' })
+                return { type: 'success' }
             } else {
-                reject({
+                throw {
                     type: 'validation-error',
                     reason: 'Wrong Credentials'
-                })
+                }
             }
-        })
     }
 
     forgotPassword(user: string): ActivityResponse {

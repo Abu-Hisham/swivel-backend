@@ -58,16 +58,14 @@ export class Enterprise implements IKentaPayEnterprise {
         request.input('county', county);
         let temp = await request.query(query);
         let result = temp.recordsets
-        return new Promise<ActivityResponse>((resolve, reject) => {
             if (result.length === 0) {
-                reject({
+                throw {
                     type: 'validation-error',
                     reason: 'County with the given name does not exist'
-                });
+                };
             } else {
-                resolve({ type: 'success' });
+               return { type: 'success' };
             }
-        })
     }
 
     async saveEnterprise(companyName: string, contactPersonsName: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, isCoporate: number) {
@@ -78,7 +76,6 @@ export class Enterprise implements IKentaPayEnterprise {
         let temp = await request.query(query);
         let result = temp.recordsets[0];
         let countyExist = await this.checkCounty(county)
-        return await new Promise<ActivityResponse>(async (resolve, reject) => {
             if (result.length === 0 && countyExist.type === 'success') {
                 let query: string = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
                                             VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`
@@ -91,13 +88,12 @@ export class Enterprise implements IKentaPayEnterprise {
                 request.input('county', county);
                 request.input('isCorporate', sql.Bit, isCoporate);
                 await request.query(query);
-                resolve({ type: 'success' })
+                return { type: 'success' }
             } else {
-                reject({
+                throw {
                     type: 'validation-error',
                     reason: 'Company with the Name or Url already exists',
-                })
+                }
             }
-        })
     }
 }
