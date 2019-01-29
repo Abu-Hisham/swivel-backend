@@ -55,10 +55,11 @@ class Enterprise {
                                 reason: 'Company with the Name or Url already exists',
                             });
                         }
-                    }).catch((error) => {
-                        reject(error);
-                    });
-                });
+                    }).catch((err) => reject(err));
+                }).catch(() => reject({
+                    type: 'app-crashed',
+                    reason: 'Database Connection Error'
+                }));
             }
             else {
                 reject({
@@ -99,10 +100,11 @@ class Enterprise {
                                 reason: 'Company with the Name or Url already exists',
                             });
                         }
-                    }).catch((error) => {
-                        reject(error);
-                    });
-                });
+                    }).catch((err) => reject(err));
+                }).catch(() => reject({
+                    type: 'app-crashed',
+                    reason: 'Database Connection Error'
+                }));
             }
             else {
                 reject({

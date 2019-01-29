@@ -60,7 +60,7 @@ export class Authentication implements IAuthentication {
         return new Promise<ActivityResponse>((resolve, reject) => {
             let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
             if (result.error === null) {
-                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
+//-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
                 let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`
                 let query1: string = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`
                 let query2: string = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`
@@ -123,8 +123,11 @@ export class Authentication implements IAuthentication {
                             }
                         })
                     })
-                }).catch()
-                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
+                }).catch(() => reject({
+                    type: 'app-crashed',
+                    reason: 'Database Connection Error'
+                }))
+//-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
             }
             else {
                 reject({
@@ -134,69 +137,6 @@ export class Authentication implements IAuthentication {
             }
         })
     }
-
-    // async addUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string): Promise<ActivityResponse> {
-    //     let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`
-    //     let query1: string = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`
-    //     let query2: string = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`
-    //     let request = new sql.Request();
-    //     request.input('mobileNumber', mobileNumber)
-    //     request.input('emailAddress', emailAddress)
-    //     request.input('nationalID', nationalID)
-    //     var temp = await request.query(query)
-    //     var temp1 = await request.query(query1)
-    //     var temp2 = await request.query(query2)
-    //     let error_msg: string[] = ['', '', '']
-    //     let index: number = 0
-    //     if (temp.recordsets[0].length > 0) {
-    //         let msg = `Mobile Number ${mobileNumber}`
-    //         error_msg[index] = msg
-    //         index++;
-    //     }
-    //     if (temp1.recordsets[0].length > 0) {
-    //         let msg = `Email Address ${emailAddress}`
-    //         error_msg[index] = msg
-    //         index++;
-    //     }
-    //     if (temp2.recordsets[0].length > 0) {
-    //         let msg = `ID Number ${nationalID}`
-    //         error_msg[index] = msg;
-    //         index++;
-    //     }
-    //         if (index === 0) {
-    //             let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate()
-    //             let passwordHash = passHash.generate(password)
-    //             let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
-    //                                 VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`
-    //             let request = new sql.Request();
-    //             request.input('firstName', firstName)
-    //             request.input('lastName', lastName)
-    //             request.input('otherName', otherName)
-    //             request.input('mobileNumber', mobileNumber)
-    //             request.input('emailAddress', emailAddress)
-    //             request.input('country', country)
-    //             request.input('dateOfBirth', DOB)
-    //             request.input('gender', gender)
-    //             request.input('nationality', nationality)
-    //             request.input('nationalID', nationalID)
-    //             request.input('passwordHash', passwordHash)
-
-    //             await request.query(query);
-    //             return { type: 'success' };
-    //         }
-    //         else {
-    //             let reason = ''
-    //             error_msg.forEach((value) => {
-    //                 if (value) {
-    //                     reason += value + ', '
-    //                 }
-    //             })
-    //             throw{
-    //                 type: 'validation-error',
-    //                 reason: 'User with ' + reason + ' Exist'
-    //             }
-    //         }
-    // }
 
     login(user: string, password: string): Promise<ActivityResponse> {
         return new Promise<ActivityResponse>((resolve, reject) => {
@@ -214,10 +154,10 @@ export class Authentication implements IAuthentication {
                             reason: 'Wrong Credentials'
                         })
                     }
-                }).catch((err) => err.message = {
+                }).catch(() => reject({
                     type: 'app-crashed',
                     reason: 'Database Connection Error'
-                })
+                }))
             } else {
                 reject({
                     type: 'validation-error',
@@ -225,21 +165,6 @@ export class Authentication implements IAuthentication {
                 })
             }
         })
-    }
-
-    async checkUser(user: string, password: string) {
-        let query: string = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
-        let request = new sql.Request();
-        request.input('user', user)
-        let results = await request.query(query);
-        if (results.recordsets[0].length != 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
-            return { type: 'success' }
-        } else {
-            throw {
-                type: 'validation-error',
-                reason: 'Wrong Credentials'
-            }
-        }
     }
 
     forgotPassword(user: string): ActivityResponse {

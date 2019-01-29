@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseJoi = require('joi');
 const Extension = require('joi-date-extensions');
@@ -59,114 +51,112 @@ class Authentication {
         return result;
     }
     register(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm) {
-        return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => {
             let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm);
             if (result.error === null) {
-                var temp = yield this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
-                    .then((result) => { console.log(result); })
-                    .catch((error) => { console.log(error); });
-                return temp;
-            }
-            else {
-                return {
-                    type: 'validation-error',
-                    reason: result.error
-                };
-            }
-        });
-    }
-    addUser(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`;
-            let query1 = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`;
-            let query2 = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`;
-            let request = new sql.Request();
-            request.input('mobileNumber', mobileNumber);
-            request.input('emailAddress', emailAddress);
-            request.input('nationalID', nationalID);
-            var temp = yield request.query(query);
-            var temp1 = yield request.query(query1);
-            var temp2 = yield request.query(query2);
-            let error_msg = ['', '', ''];
-            let index = 0;
-            if (temp.recordsets[0].length > 0) {
-                let msg = `Mobile Number ${mobileNumber}`;
-                error_msg[index] = msg;
-                index++;
-            }
-            if (temp1.recordsets[0].length > 0) {
-                let msg = `Email Address ${emailAddress}`;
-                error_msg[index] = msg;
-                index++;
-            }
-            if (temp2.recordsets[0].length > 0) {
-                let msg = `ID Number ${nationalID}`;
-                error_msg[index] = msg;
-                index++;
-            }
-            if (index === 0) {
-                let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
-                let passwordHash = passHash.generate(password);
-                let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
-                                    VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
+                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
+                let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`;
+                let query1 = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`;
+                let query2 = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`;
                 let request = new sql.Request();
-                request.input('firstName', firstName);
-                request.input('lastName', lastName);
-                request.input('otherName', otherName);
                 request.input('mobileNumber', mobileNumber);
                 request.input('emailAddress', emailAddress);
-                request.input('country', country);
-                request.input('dateOfBirth', DOB);
-                request.input('gender', gender);
-                request.input('nationality', nationality);
                 request.input('nationalID', nationalID);
-                request.input('passwordHash', passwordHash);
-                yield request.query(query);
-                return { type: 'success' };
+                request.query(query).then((res) => {
+                    request.query(query1).then((res1) => {
+                        request.query(query2).then((res2) => {
+                            let error_msg = ['', '', ''];
+                            let index = 0;
+                            if (res.recordsets[0].length > 0) {
+                                let msg = `Mobile Number ${mobileNumber}`;
+                                error_msg[index] = msg;
+                                index++;
+                            }
+                            if (res1.recordsets[0].length > 0) {
+                                let msg = `Email Address ${emailAddress}`;
+                                error_msg[index] = msg;
+                                index++;
+                            }
+                            if (res2.recordsets[0].length > 0) {
+                                let msg = `ID Number ${nationalID}`;
+                                error_msg[index] = msg;
+                                index++;
+                            }
+                            if (index === 0) {
+                                let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                                let passwordHash = passHash.generate(password);
+                                let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                                                VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
+                                let request = new sql.Request();
+                                request.input('firstName', firstName);
+                                request.input('lastName', lastName);
+                                request.input('otherName', otherName);
+                                request.input('mobileNumber', mobileNumber);
+                                request.input('emailAddress', emailAddress);
+                                request.input('country', country);
+                                request.input('dateOfBirth', DOB);
+                                request.input('gender', gender);
+                                request.input('nationality', nationality);
+                                request.input('nationalID', nationalID);
+                                request.input('passwordHash', passwordHash);
+                                request.query(query);
+                                resolve({ type: 'success' });
+                            }
+                            else {
+                                let reason = '';
+                                error_msg.forEach((value) => {
+                                    if (value) {
+                                        reason += value + ', ';
+                                    }
+                                });
+                                reject({
+                                    type: 'validation-error',
+                                    reason: 'User with ' + reason + ' Exist'
+                                });
+                            }
+                        });
+                    });
+                }).catch(() => reject({
+                    type: 'app-crashed',
+                    reason: 'Database Connection Error'
+                }));
+                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
             }
             else {
-                let reason = '';
-                error_msg.forEach((value) => {
-                    if (value) {
-                        reason += value + ', ';
-                    }
-                });
-                throw {
+                reject({
                     type: 'validation-error',
-                    reason: 'User with ' + reason + ' Exist'
-                };
+                    reason: result.error
+                });
             }
         });
     }
     login(user, password) {
-        return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => {
             let result = this.validateLogin(user, password);
             if (result.error === null) {
-                let temp = yield this.checkUser(result.value.user, result.value.password).then((res) => { console.log(res); }).catch((err) => { console.log(err); });
-                return temp;
+                let query = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
+                let request = new sql.Request();
+                request.input('user', user);
+                request.query(query).then((res) => {
+                    if (res.recordsets[0].length != 0 && passHash.verify(password, res.recordset[0]['PASSWORD'])) {
+                        resolve({ type: 'success' });
+                    }
+                    else {
+                        reject({
+                            type: 'validation-error',
+                            reason: 'Wrong Credentials'
+                        });
+                    }
+                }).catch(() => reject({
+                    type: 'app-crashed',
+                    reason: 'Database Connection Error'
+                }));
             }
             else {
-                return {
+                reject({
                     type: 'validation-error',
                     reason: result.error
-                };
-            }
-        });
-    }
-    checkUser(user, password) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let query = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
-            let request = new sql.Request();
-            request.input('user', user);
-            let results = yield request.query(query);
-            if (results.recordsets[0].length != 0 && passHash.verify(password, results.recordset[0]['PASSWORD'])) {
-                return { type: 'success' };
-            }
-            else {
-                throw {
-                    type: 'validation-error',
-                    reason: 'Wrong Credentials'
-                };
+                });
             }
         });
     }

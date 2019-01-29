@@ -28,7 +28,6 @@ class Contact {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let result = this.validateInput(name, email, subject, message, user);
             if (result.error === null) {
-                // return this.saveForm(result.value.name, result.value.email, result.value.subject, result.value.message, result.value.user).then().catch()
                 let query = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
                 let request = new sql.Request();
                 request.input('user', user);
@@ -51,7 +50,10 @@ class Contact {
                             reason: 'Invalid User'
                         });
                     }
-                });
+                }).catch(() => reject({
+                    type: 'app-crashed',
+                    reason: 'Database Connection Error'
+                }));
             }
             else {
                 reject({

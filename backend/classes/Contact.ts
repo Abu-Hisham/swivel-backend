@@ -23,7 +23,6 @@ export class Contact implements IContactUs {
         return new Promise<ActivityResponse>(async(resolve, reject) => {
             let result = this.validateInput(name, email, subject, message, user)
             if (result.error === null) {
-                // return this.saveForm(result.value.name, result.value.email, result.value.subject, result.value.message, result.value.user).then().catch()
                 let query: string = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
                 let request = new sql.Request();
                 request.input('user', user)
@@ -47,7 +46,10 @@ export class Contact implements IContactUs {
                         })
                     }
 
-                })
+                }).catch(() => reject({
+                    type: 'app-crashed',
+                    reason: 'Database Connection Error'
+                }))
             } else {
                 reject({
                     type: 'validation-error',
@@ -56,30 +58,4 @@ export class Contact implements IContactUs {
             }
         })
     }
-
-    // async saveForm(name: string, email: string, subject: string, message: string, user: string): Promise<ActivityResponse> {
-    //     let query: string = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
-    //     let request = new sql.Request();
-    //     request.input('user', user)
-    //     var temp = await request.query(query)
-    //     let results = temp.recordsets[0];
-    //     if (results.length === 0) {
-    //         let query: string = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
-    //                                  VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`
-    //         let request = new sql.Request();
-    //         request.input('name', name)
-    //         request.input('email', email)
-    //         request.input('subject', subject)
-    //         request.input('message', message)
-    //         request.input('user', user)
-    //         await request.query(query);
-    //         return { type: 'success' }
-    //     }
-    //     else {
-    //         throw {
-    //             type: 'validation-error',
-    //             reason: 'Invalid User'
-    //         }
-    //     }
-    // }
 }
