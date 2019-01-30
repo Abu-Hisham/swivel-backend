@@ -6,6 +6,7 @@ const Joi = BaseJoi.extend(Extension);
 import moment = require('moment');
 import sql = require('mssql');
 import passHash = require('password-hash');
+import { resolve } from "url";
 
 export class Authentication implements IAuthentication {
     validateLogin(user: string, password: string) {
@@ -55,19 +56,83 @@ export class Authentication implements IAuthentication {
         return result;
     }
 
-    async register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string) {
-        let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
-        if (result.error === null) {
-            var temp = await this.addUser(result.value.firstName, result.value.lastName, result.value.otherName, result.value.mobileNumber, result.value.emailAddress, result.value.country, result.value.dateOfBirth, result.value.gender, result.value.nationality, result.value.nationalID, result.value.password)
-                .then((result) => { console.log(result) })
-                .catch((error) => { console.log(error) })
-            return temp
-        } else {
-            return {
-                type: 'validation-error',
-                reason: result.error
+    register(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string, passwordConfirm: string):Promise<ActivityResponse> {
+        return new Promise<ActivityResponse>((resolve,reject)=>{
+            let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
+            if (result.error === null) {
+//-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
+            let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`
+            let query1: string = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`
+            let query2: string = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`
+            let request = new sql.Request();
+            request.input('mobileNumber', mobileNumber)
+            request.input('emailAddress', emailAddress)
+            request.input('nationalID', nationalID)
+            request.query(query).then((res)=>{
+                request.query(query1).then((res1)=>{
+                    request.query(query2).then((res2)=>{
+                        let error_msg: string[] = ['', '', '']
+                        let index: number = 0
+                        if (res.recordsets[0].length > 0) {
+                            let msg = `Mobile Number ${mobileNumber}`
+                            error_msg[index] = msg
+                            index++;
+                        }
+                        if (res1.recordsets[0].length > 0) {
+                            let msg = `Email Address ${emailAddress}`
+                            error_msg[index] = msg
+                            index++;
+                        }
+                        if (res2.recordsets[0].length > 0) {
+                            let msg = `ID Number ${nationalID}`
+                            error_msg[index] = msg;
+                            index++;
+                        }
+                        if (index === 0) {
+                            let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate()
+                            let passwordHash = passHash.generate(password)
+                            let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                                                VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`
+                            let request = new sql.Request();
+                            request.input('firstName', firstName)
+                            request.input('lastName', lastName)
+                            request.input('otherName', otherName)
+                            request.input('mobileNumber', mobileNumber)
+                            request.input('emailAddress', emailAddress)
+                            request.input('country', country)
+                            request.input('dateOfBirth', DOB)
+                            request.input('gender', gender)
+                            request.input('nationality', nationality)
+                            request.input('nationalID', nationalID)
+                            request.input('passwordHash', passwordHash)
+        
+                            request.query(query);
+                            resolve ({ type: 'success' });
+                        }
+                        else {
+                            let reason = ''
+                            error_msg.forEach((value) => {
+                                if (value) {
+                                    reason += value + ', '
+                                }
+                            })
+                            reject({
+                                type: 'validation-error',
+                                reason: 'User with ' + reason + ' Exist'
+                            })
+                        }
+                    })
+                })
+            }).catch()
+//-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
             }
-        }
+            else {
+                reject({
+                    type: 'validation-error',
+                    reason: result.error
+                })
+            }
+        }) 
     }
 
     async addUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, password: string): Promise<ActivityResponse> {

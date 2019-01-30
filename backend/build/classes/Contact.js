@@ -25,43 +25,41 @@ class Contact {
         return result;
     }
     contactForm(name, email, subject, message, user) {
-        let result = this.validateInput(name, email, subject, message, user);
-        if (result.error === null) {
-            return this.saveForm(result.value.name, result.value.email, result.value.subject, result.value.message, result.value.user).then().catch();
-        }
-        else {
-            return {
-                type: 'validation-error',
-                reason: result.error
-            };
-        }
-    }
-    saveForm(name, email, subject, message, user) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let query = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
-            let request = new sql.Request();
-            request.input('user', user);
-            var temp = yield request.query(query);
-            let results = temp.recordsets[0];
-            if (results.length === 0) {
-                let query = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
-                                     VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`;
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            let result = this.validateInput(name, email, subject, message, user);
+            if (result.error === null) {
+                // return this.saveForm(result.value.name, result.value.email, result.value.subject, result.value.message, result.value.user).then().catch()
+                let query = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
                 let request = new sql.Request();
-                request.input('name', name);
-                request.input('email', email);
-                request.input('subject', subject);
-                request.input('message', message);
                 request.input('user', user);
-                yield request.query(query);
-                return { type: 'success' };
+                request.query(query).then((res) => {
+                    if (res.recordsets[0].length === 1) {
+                        let query = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
+                                     VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`;
+                        let request = new sql.Request();
+                        request.input('name', name);
+                        request.input('email', email);
+                        request.input('subject', subject);
+                        request.input('message', message);
+                        request.input('user', user);
+                        request.query(query);
+                        resolve({ type: 'success' });
+                    }
+                    else {
+                        reject({
+                            type: 'validation-error',
+                            reason: 'Invalid User'
+                        });
+                    }
+                });
             }
             else {
-                throw {
+                reject({
                     type: 'validation-error',
-                    reason: 'Invalid User'
-                };
+                    reason: result.error
+                });
             }
-        });
+        }));
     }
 }
 exports.Contact = Contact;
