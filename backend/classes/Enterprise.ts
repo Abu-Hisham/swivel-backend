@@ -19,7 +19,6 @@ export class Enterprise implements IKentaPayEnterprise {
         return result;
     }
 
-
     corporate(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county): Promise<ActivityResponse> {
         return new Promise<ActivityResponse>((resolve, reject) => {
             let result = this.validateInput(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county)
