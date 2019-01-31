@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const Joi = require("joi");
 const sql = require("mssql");
@@ -130,37 +122,6 @@ class Enterprise {
                     resolve({ type: 'success' });
                 }
             });
-        });
-    }
-    saveEnterprise(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county, isCoporate) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let query = `SELECT * FROM [TBENTERPRISE] WHERE COMPANYNAME=@companyName OR COMPANYURL=@companyUrl`;
-            let request = new sql.Request();
-            request.input('companyName', companyName);
-            request.input('companyUrl', companyUrl);
-            let temp = yield request.query(query);
-            let result = temp.recordsets[0];
-            let countyExist = yield this.checkCounty(county);
-            if (result.length === 0 && countyExist.type === 'success') {
-                let query = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
-                                            VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`;
-                let request = new sql.Request();
-                request.input('companyName', companyName);
-                request.input('contactPersonsName', contactPersonsName);
-                request.input('companyUrl', companyUrl);
-                request.input('emailAddress', emailAddress);
-                request.input('phoneNumber', phoneNumber);
-                request.input('county', county);
-                request.input('isCorporate', sql.Bit, isCoporate);
-                yield request.query(query);
-                return { type: 'success' };
-            }
-            else {
-                throw {
-                    type: 'validation-error',
-                    reason: 'Company with the Name or Url already exists',
-                };
-            }
         });
     }
 }

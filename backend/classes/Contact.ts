@@ -10,7 +10,7 @@ export class Contact implements IContactUs {
         const schema = Joi.object().keys({
             name: Joi.string().min(3).regex(/^[A-Z a-z]+$/).required().replace(/\s{2,}/g, ' '),
             email: Joi.string().email({ minDomainAtoms: 2 }).required(),
-            subject: Joi.string().min(3).max(255).required().replace(/\s{2,}/g, ' '),
+            subject: Joi.string().min(3).max(255).required().replace(/\s{2,}/g, ''),
             message: Joi.string().min(3).required().replace(/\s{2,}/g, ' '),
             user: Joi.alternatives([Joi.string().max(255).email({ minDomainAtoms: 2 }).required(),
             Joi.string().min(10).max(15).regex(/[0-9]/).required().replace(/\s{2,}/g, ' ')])
