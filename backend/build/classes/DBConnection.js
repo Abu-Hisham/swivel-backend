@@ -27,7 +27,7 @@ const dbconnection = sql['connect']({
         // console.log(usr.register("Patrick","James","Kimani","0701633367","patrick@ekenya.co.ke", "Kenya","03-11-1991", "M", "Kenyan","31672624","Zizahry@123", "Zizahry@123").
         // then((res)=>{console.log(res)}).
         // catch((err)=>{console.log(err)}));
-        usr.register("Abdulaziz", "Mohd", "Ra   jab", "070163    3206", "abdulll@ekenya.co.ke", "Ke     nya", "13-06-1993", "M", "Kenyan", "33672609", "Zizahry@123", "Zizahry@123").then((res) => { console.log(res); }).catch((err) => { console.log(err); });
+        usr.register("Abdulaziz", "Mohd", "Ra   jab", "070163    3016", "abdull@ekenya.co.ke", "Ke     nya", "13-06-1993", "M", "Kenyan", "336    72609", "Zizahry@123", "Zizahry@123").then((res) => { console.log(res); }).catch((err) => { console.log(err); });
         // console.log(usr.login("abdul@ekenya.co.ke", "Zizahry@123"))
         // console.log(msg.contactForm("Abdul Aziz", "abdo@ekenya.co.ke", "My subject", "Here's my Message", "0710633018").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)}))
     }

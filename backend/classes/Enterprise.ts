@@ -26,8 +26,8 @@ export class Enterprise implements IKentaPayEnterprise {
             if (result.error == null) {
                 let query = `SELECT * FROM [TBENTERPRISE] WHERE COMPANYNAME=@companyName OR COMPANYURL=@companyUrl`
                 let request = new sql.Request();
-                request.input('companyName', companyName);
-                request.input('companyUrl', companyUrl);
+                request.input('companyName', result.value.companyName);
+                request.input('companyUrl', result.value.companyUrl);
 
                 request.query(query).then((res) => {
                     this.checkCounty(county).then(() => {
@@ -35,15 +35,19 @@ export class Enterprise implements IKentaPayEnterprise {
                             let query: string = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
                                                     VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`
                             let request = new sql.Request();
-                            request.input('companyName', companyName);
-                            request.input('contactPersonsName', contactPersonsName);
-                            request.input('companyUrl', companyUrl);
-                            request.input('emailAddress', emailAddress);
-                            request.input('phoneNumber', phoneNumber);
-                            request.input('county', county);
+                            request.input('companyName', result.value.companyName);
+                            request.input('contactPersonsName', result.value.contactPersonsName);
+                            request.input('companyUrl', result.value.companyUrl);
+                            request.input('emailAddress', result.value.emailAddress);
+                            request.input('phoneNumber', result.value.phoneNumber);
+                            request.input('county', result.value.county);
                             request.input('isCorporate', sql.Bit, isCoporate);
-                            request.query(query);
-                            resolve({ type: 'success' })
+                            request.query(query).then(() => {
+                                resolve({ type: 'success' })
+                            }).catch(() => reject({
+                                type: 'app-crashed',
+                                reason: 'Database Connection Error'
+                            }))
                         } else {
                             reject({
                                 type: 'validation-error',
@@ -71,24 +75,28 @@ export class Enterprise implements IKentaPayEnterprise {
             if (result.error == null) {
                 let query = `SELECT * FROM [TBENTERPRISE] WHERE COMPANYNAME=@companyName OR COMPANYURL=@companyUrl`
                 let request = new sql.Request();
-                request.input('companyName', companyName);
-                request.input('companyUrl', companyUrl);
+                request.input('companyName', result.value.companyName);
+                request.input('companyUrl', result.value.companyUrl);
 
                 request.query(query).then((res) => {
-                    this.checkCounty(county).then(() => {
+                    this.checkCounty(result.value.county).then(() => {
                         if (res.recordsets[0].length === 0) {
                             let query: string = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
                                                         VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`
                             let request = new sql.Request();
-                            request.input('companyName', companyName);
-                            request.input('contactPersonsName', contactPersonsName);
-                            request.input('companyUrl', companyUrl);
-                            request.input('emailAddress', emailAddress);
-                            request.input('phoneNumber', phoneNumber);
-                            request.input('county', county);
+                            request.input('companyName', result.value.companyName);
+                            request.input('contactPersonsName', result.value.contactPersonsName);
+                            request.input('companyUrl', result.value.companyUrl);
+                            request.input('emailAddress', result.value.emailAddress);
+                            request.input('phoneNumber', result.value.phoneNumber);
+                            request.input('county', result.value.county);
                             request.input('isCorporate', sql.Bit, isCoporate);
-                            request.query(query);
-                            resolve({ type: 'success' })
+                            request.query(query).then(() => {
+                                resolve({ type: 'success' })
+                            }).catch(() => reject({
+                                type: 'app-crashed',
+                                reason: 'Database Connection Error'
+                            }))
                         } else {
                             reject({
                                 type: 'validation-error',
@@ -123,7 +131,10 @@ export class Enterprise implements IKentaPayEnterprise {
                 } else {
                     resolve({ type: 'success' })
                 }
-            })
+            }).catch(() => reject({
+                type: 'app-crashed',
+                reason: 'Database Connection Error'
+            })) 
         })
 
     }

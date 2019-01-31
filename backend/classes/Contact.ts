@@ -25,19 +25,23 @@ export class Contact implements IContactUs {
             if (result.error === null) {
                 let query: string = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`
                 let request = new sql.Request();
-                request.input('user', user)
+                request.input('user', result.value.user)
                 request.query(query).then((res) => {
                     if (res.recordsets[0].length === 1) {
                         let query: string = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
                                      VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`
                         let request = new sql.Request();
-                        request.input('name', name)
-                        request.input('email', email)
-                        request.input('subject', subject)
-                        request.input('message', message)
-                        request.input('user', user)
-                        request.query(query);
-                        resolve({ type: 'success' })
+                        request.input('name', result.value.name)
+                        request.input('email', result.value.email)
+                        request.input('subject', result.value.subject)
+                        request.input('message', result.value.message)
+                        request.input('user', result.value.user)
+                        request.query(query).then(()=>{
+                            resolve({ type: 'success' })
+                        }).catch(() => reject({
+                            type: 'app-crashed',
+                            reason: 'Database Connection Error'
+                        }));
                     }
                     else {
                         reject({
