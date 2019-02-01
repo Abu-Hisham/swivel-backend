@@ -30,7 +30,7 @@ export class Enterprise implements IKentaPayEnterprise {
                 request.input('companyUrl', result.value.companyUrl);
 
                 request.query(query).then((res) => {
-                    this.checkCounty(county).then(() => {
+                    this.checkCounty(result.value.county).then(() => {
                         if (res.recordsets[0].length === 0) {
                             let query: string = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
                                                     VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`

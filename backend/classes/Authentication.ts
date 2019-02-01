@@ -105,8 +105,12 @@ export class Authentication implements IAuthentication {
                                 request.input('nationalID', result.value.nationalID)
                                 request.input('passwordHash', passwordHash)
 
-                                request.query(query);
-                                resolve({ type: 'success' });
+                                request.query(query).then(() => {
+                                    resolve({ type: 'success' })
+                                }).catch(() => reject({
+                                    type: 'app-crashed',
+                                    reason: 'Database Connection Error'
+                                }))
                             }
                             else {
                                 let reason = ''
