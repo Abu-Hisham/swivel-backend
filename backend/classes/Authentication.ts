@@ -110,9 +110,9 @@ export class Authentication implements IAuthentication {
 
                                         request.query(query).then(() => {
                                             resolve({ type: 'success' })
-                                        }).catch(() => reject({
+                                        }).catch(error => reject({
                                             type: 'app-crashed',
-                                            reason: 'Database Connection Error'
+                                            reason: error
                                         }))
                                     } else {
                                         reject({
@@ -132,7 +132,7 @@ export class Authentication implements IAuthentication {
                                 })
                                 reject({
                                     type: 'validation-error',
-                                    reason: 'User with ' + reason + ' Exist'
+                                    reason: 'User with ' + reason + ' Exists'
                                 })
                             }
                         }).catch(error => reject({
