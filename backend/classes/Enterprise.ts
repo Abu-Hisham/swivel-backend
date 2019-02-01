@@ -28,7 +28,6 @@ export class Enterprise implements IKentaPayEnterprise {
                 let request = new sql.Request();
                 request.input('companyName', result.value.companyName);
                 request.input('companyUrl', result.value.companyUrl);
-
                 request.query(query).then((res) => {
                     this.checkCounty(result.value.county).then(() => {
                         if (res.recordsets[0].length === 0) {

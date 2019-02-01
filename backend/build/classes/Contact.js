@@ -43,9 +43,9 @@ class Contact {
                         request.input('user', result.value.user);
                         request.query(query).then(() => {
                             resolve({ type: 'success' });
-                        }).catch(() => reject({
+                        }).catch(error => reject({
                             type: 'app-crashed',
-                            reason: 'Database Connection Error'
+                            reason: error
                         }));
                     }
                     else {
@@ -54,9 +54,9 @@ class Contact {
                             reason: 'Invalid User'
                         });
                     }
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }));
             }
             else {

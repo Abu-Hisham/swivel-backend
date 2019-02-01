@@ -26,7 +26,7 @@ class Enterprise {
                 request.input('companyName', result.value.companyName);
                 request.input('companyUrl', result.value.companyUrl);
                 request.query(query).then((res) => {
-                    this.checkCounty(county).then(() => {
+                    this.checkCounty(result.value.county).then(() => {
                         if (res.recordsets[0].length === 0) {
                             let query = `INSERT into [TBENTERPRISE] ([COMPANYNAME],[CONTACTPERSONSNAME],[COMPANYURL],[EMAILADDRESS],[MOBILENUMBER],[COUNTYID],[ISCORPORATE],[CREATEDAT]) 
                                                     VALUES(@companyName, @contactPersonsName, @companyUrl, @emailAddress, @phoneNumber,(SELECT RCID FROM TBCOUNTIES WHERE NAME=@county), @isCorporate,GETDATE());`;
@@ -40,9 +40,9 @@ class Enterprise {
                             request.input('isCorporate', sql.Bit, isCoporate);
                             request.query(query).then(() => {
                                 resolve({ type: 'success' });
-                            }).catch(() => reject({
+                            }).catch(error => reject({
                                 type: 'app-crashed',
-                                reason: 'Database Connection Error'
+                                reason: error
                             }));
                         }
                         else {
@@ -52,9 +52,9 @@ class Enterprise {
                             });
                         }
                     }).catch((err) => reject(err));
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }));
             }
             else {
@@ -89,9 +89,9 @@ class Enterprise {
                             request.input('isCorporate', sql.Bit, isCoporate);
                             request.query(query).then(() => {
                                 resolve({ type: 'success' });
-                            }).catch(() => reject({
+                            }).catch(error => reject({
                                 type: 'app-crashed',
-                                reason: 'Database Connection Error'
+                                reason: error
                             }));
                         }
                         else {
@@ -101,9 +101,9 @@ class Enterprise {
                             });
                         }
                     }).catch((err) => reject(err));
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }));
             }
             else {
@@ -129,9 +129,9 @@ class Enterprise {
                 else {
                     resolve({ type: 'success' });
                 }
-            }).catch(() => reject({
+            }).catch(error => reject({
                 type: 'app-crashed',
-                reason: 'Database Connection Error'
+                reason: error
             }));
         });
     }

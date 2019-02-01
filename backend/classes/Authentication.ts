@@ -6,6 +6,8 @@ const Joi = BaseJoi.extend(Extension);
 import moment = require('moment');
 import sql = require('mssql');
 import passHash = require('password-hash');
+const bcrypt = require('bcrypt');
+const saltRounds = 10
 
 export class Authentication implements IAuthentication {
     validateLogin(user: string, password: string) {
@@ -59,7 +61,7 @@ export class Authentication implements IAuthentication {
         return new Promise<ActivityResponse>((resolve, reject) => {
             let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm)
             if (result.error === null) {
-//-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
+                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
                 let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`
                 let query1: string = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`
                 let query2: string = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`
@@ -88,29 +90,38 @@ export class Authentication implements IAuthentication {
                                 index++;
                             }
                             if (index === 0) {
-                                let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate()
-                                let passwordHash = passHash.generate(result.value.password)
-                                let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
-                                                     VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`
-                                let request = new sql.Request();
-                                request.input('firstName', result.value.firstName)
-                                request.input('lastName', result.value.lastName)
-                                request.input('otherName', result.value.otherName)
-                                request.input('mobileNumber', result.value.mobileNumber)
-                                request.input('emailAddress', result.value.emailAddress)
-                                request.input('country', result.value.country)
-                                request.input('dateOfBirth', DOB)
-                                request.input('gender', result.value.gender)
-                                request.input('nationality', result.value.nationality)
-                                request.input('nationalID', result.value.nationalID)
-                                request.input('passwordHash', passwordHash)
+                                bcrypt.hash(result.value.password, saltRounds, function (err, hash) {
+                                    if (hash) {
+                                        let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate()
+                                        let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                                                             VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`
+                                        let request = new sql.Request();
+                                        request.input('firstName', result.value.firstName)
+                                        request.input('lastName', result.value.lastName)
+                                        request.input('otherName', result.value.otherName)
+                                        request.input('mobileNumber', result.value.mobileNumber)
+                                        request.input('emailAddress', result.value.emailAddress)
+                                        request.input('country', result.value.country)
+                                        request.input('dateOfBirth', DOB)
+                                        request.input('gender', result.value.gender)
+                                        request.input('nationality', result.value.nationality)
+                                        request.input('nationalID', result.value.nationalID)
+                                        request.input('passwordHash', hash)
 
-                                request.query(query).then(() => {
-                                    resolve({ type: 'success' })
-                                }).catch(() => reject({
-                                    type: 'app-crashed',
-                                    reason: 'Database Connection Error'
-                                }))
+                                        request.query(query).then(() => {
+                                            resolve({ type: 'success' })
+                                        }).catch(() => reject({
+                                            type: 'app-crashed',
+                                            reason: 'Database Connection Error'
+                                        }))
+                                    } else {
+                                        reject({
+                                            type: 'app-crashed',
+                                            reason: err
+                                        })
+                                    }
+
+                                })
                             }
                             else {
                                 let reason = ''
@@ -136,7 +147,7 @@ export class Authentication implements IAuthentication {
                     type: 'app-crashed',
                     reason: error
                 }))
-//-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
+                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
             }
             else {
                 reject({
@@ -155,18 +166,30 @@ export class Authentication implements IAuthentication {
                 let request = new sql.Request();
                 request.input('user', result.value.user)
                 request.query(query).then((res) => {
-                    if (res.recordsets[0].length != 0 && passHash.verify(result.value.password, res.recordset[0]['PASSWORD'])) {
-                        resolve({ type: 'success' })
-                    } else {
-                        reject({
-                            type: 'validation-error',
-                            reason: 'Wrong Credentials'
-                        })
-                    }
-                }).catch(error => reject({
+                    if (res.recordsets[0].length != 0) {
+                        bcrypt.compare(result.value.password, res.recordset[0]['PASSWORD']).then((res) => {
+                            if(res){
+                                resolve({ type: 'success' })
+                            }else{
+                                reject({
+                                    type: 'validation-error',
+                                    reason: 'Wrong Credentials'
+                                })
+                            }
+                        }).catch(error=>reject({
                             type: 'app-crashed',
                             reason: error
                         }))
+                    } else {
+                        reject({
+                            type: 'validation-error',
+                            reason: 'Invalid User'
+                        })
+                    }
+                }).catch(error => reject({
+                    type: 'app-crashed',
+                    reason: error
+                }))
             } else {
                 reject({
                     type: 'validation-error',

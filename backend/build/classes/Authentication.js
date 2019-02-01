@@ -5,7 +5,8 @@ const Extension = require('joi-date-extensions');
 const Joi = BaseJoi.extend(Extension);
 const moment = require("moment");
 const sql = require("mssql");
-const passHash = require("password-hash");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 class Authentication {
     validateLogin(user, password) {
         const loginSchema = Joi.object().keys({
@@ -83,24 +84,37 @@ class Authentication {
                                 index++;
                             }
                             if (index === 0) {
-                                let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
-                                let passwordHash = passHash.generate(result.value.password);
-                                let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
-                                                     VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
-                                let request = new sql.Request();
-                                request.input('firstName', result.value.firstName);
-                                request.input('lastName', result.value.lastName);
-                                request.input('otherName', result.value.otherName);
-                                request.input('mobileNumber', result.value.mobileNumber);
-                                request.input('emailAddress', result.value.emailAddress);
-                                request.input('country', result.value.country);
-                                request.input('dateOfBirth', DOB);
-                                request.input('gender', result.value.gender);
-                                request.input('nationality', result.value.nationality);
-                                request.input('nationalID', result.value.nationalID);
-                                request.input('passwordHash', passwordHash);
-                                request.query(query);
-                                resolve({ type: 'success' });
+                                bcrypt.hash(result.value.password, saltRounds, function (err, hash) {
+                                    if (hash) {
+                                        let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                                        let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                                                             VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
+                                        let request = new sql.Request();
+                                        request.input('firstName', result.value.firstName);
+                                        request.input('lastName', result.value.lastName);
+                                        request.input('otherName', result.value.otherName);
+                                        request.input('mobileNumber', result.value.mobileNumber);
+                                        request.input('emailAddress', result.value.emailAddress);
+                                        request.input('country', result.value.country);
+                                        request.input('dateOfBirth', DOB);
+                                        request.input('gender', result.value.gender);
+                                        request.input('nationality', result.value.nationality);
+                                        request.input('nationalID', result.value.nationalID);
+                                        request.input('passwordHash', hash);
+                                        request.query(query).then(() => {
+                                            resolve({ type: 'success' });
+                                        }).catch(() => reject({
+                                            type: 'app-crashed',
+                                            reason: 'Database Connection Error'
+                                        }));
+                                    }
+                                    else {
+                                        reject({
+                                            type: 'app-crashed',
+                                            reason: err
+                                        });
+                                    }
+                                });
                             }
                             else {
                                 let reason = '';
@@ -114,17 +128,17 @@ class Authentication {
                                     reason: 'User with ' + reason + ' Exist'
                                 });
                             }
-                        }).catch(() => reject({
+                        }).catch(error => reject({
                             type: 'app-crashed',
-                            reason: 'Database Connection Error'
+                            reason: error
                         }));
-                    }).catch(() => reject({
+                    }).catch(error => reject({
                         type: 'app-crashed',
-                        reason: 'Database Connection Error'
+                        reason: error
                     }));
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }));
                 //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
             }
@@ -144,18 +158,31 @@ class Authentication {
                 let request = new sql.Request();
                 request.input('user', result.value.user);
                 request.query(query).then((res) => {
-                    if (res.recordsets[0].length != 0 && passHash.verify(result.value.password, res.recordset[0]['PASSWORD'])) {
-                        resolve({ type: 'success' });
+                    if (res.recordsets[0].length != 0) {
+                        bcrypt.compare(result.value.password, res.recordset[0]['PASSWORD']).then((res) => {
+                            if (res) {
+                                resolve({ type: 'success' });
+                            }
+                            else {
+                                reject({
+                                    type: 'validation-error',
+                                    reason: 'Wrong Credentials'
+                                });
+                            }
+                        }).catch(error => reject({
+                            type: 'app-crashed',
+                            reason: error
+                        }));
                     }
                     else {
                         reject({
                             type: 'validation-error',
-                            reason: 'Wrong Credentials'
+                            reason: 'Invalid User'
                         });
                     }
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }));
             }
             else {
