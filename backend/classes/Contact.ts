@@ -38,10 +38,10 @@ export class Contact implements IContactUs {
                         request.input('user', result.value.user)
                         request.query(query).then(()=>{
                             resolve({ type: 'success' })
-                        }).catch(() => reject({
+                        }).catch(error => reject({
                             type: 'app-crashed',
-                            reason: 'Database Connection Error'
-                        }));
+                            reason: error
+                        }))
                     }
                     else {
                         reject({
@@ -50,10 +50,10 @@ export class Contact implements IContactUs {
                         })
                     }
 
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
-                }))
+                    reason: error
+                }));
             } else {
                 reject({
                     type: 'validation-error',

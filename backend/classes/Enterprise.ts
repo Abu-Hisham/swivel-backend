@@ -44,9 +44,9 @@ export class Enterprise implements IKentaPayEnterprise {
                             request.input('isCorporate', sql.Bit, isCoporate);
                             request.query(query).then(() => {
                                 resolve({ type: 'success' })
-                            }).catch(() => reject({
+                            }).catch(error => reject({
                                 type: 'app-crashed',
-                                reason: 'Database Connection Error'
+                                reason: error
                             }))
                         } else {
                             reject({
@@ -55,9 +55,9 @@ export class Enterprise implements IKentaPayEnterprise {
                             })
                         }
                     }).catch((err) => reject(err))
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }))
             } else {
                 reject({
@@ -93,9 +93,9 @@ export class Enterprise implements IKentaPayEnterprise {
                             request.input('isCorporate', sql.Bit, isCoporate);
                             request.query(query).then(() => {
                                 resolve({ type: 'success' })
-                            }).catch(() => reject({
+                            }).catch(error => reject({
                                 type: 'app-crashed',
-                                reason: 'Database Connection Error'
+                                reason: error
                             }))
                         } else {
                             reject({
@@ -104,9 +104,9 @@ export class Enterprise implements IKentaPayEnterprise {
                             })
                         }
                     }).catch((err) => reject(err))
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }))
             } else {
                 reject({
@@ -131,9 +131,9 @@ export class Enterprise implements IKentaPayEnterprise {
                 } else {
                     resolve({ type: 'success' })
                 }
-            }).catch(() => reject({
+            }).catch(error => reject({
                 type: 'app-crashed',
-                reason: 'Database Connection Error'
+                reason: error
             })) 
         })
 

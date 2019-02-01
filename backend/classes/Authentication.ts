@@ -124,17 +124,17 @@ export class Authentication implements IAuthentication {
                                     reason: 'User with ' + reason + ' Exist'
                                 })
                             }
-                        }).catch(() => reject({
+                        }).catch(error => reject({
                             type: 'app-crashed',
-                            reason: 'Database Connection Error'
+                            reason: error
                         }))
-                    }).catch(() => reject({
+                    }).catch(error => reject({
                         type: 'app-crashed',
-                        reason: 'Database Connection Error'
+                        reason: error
                     }))
-                }).catch(() => reject({
+                }).catch(error => reject({
                     type: 'app-crashed',
-                    reason: 'Database Connection Error'
+                    reason: error
                 }))
 //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
             }
@@ -163,10 +163,10 @@ export class Authentication implements IAuthentication {
                             reason: 'Wrong Credentials'
                         })
                     }
-                }).catch(() => reject({
-                    type: 'app-crashed',
-                    reason: 'Database Connection Error'
-                }))
+                }).catch(error => reject({
+                            type: 'app-crashed',
+                            reason: error
+                        }))
             } else {
                 reject({
                     type: 'validation-error',
