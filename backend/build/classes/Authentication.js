@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const BaseJoi = require('joi');
 const Extension = require('joi-date-extensions');
@@ -10,7 +18,7 @@ const saltRounds = 10;
 class Authentication {
     validateLogin(user, password) {
         const loginSchema = Joi.object().keys({
-            user: Joi.alternatives([Joi.string().max(255).email({ minDomainAtoms: 2 }).required(),
+            user: Joi.alternatives([Joi.string().max(255).email().required(),
                 Joi.string().min(10).max(15).regex(/[0-9]/).required()]),
             password: Joi.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
         });
@@ -23,7 +31,7 @@ class Authentication {
             lastName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
             otherName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
             mobileNumber: Joi.string().min(10).max(15).regex(/[0-9]/).required().replace(/\s{1,}/g, ''),
-            emailAddress: Joi.string().max(255).email({ minDomainAtoms: 2 }).required(),
+            emailAddress: Joi.string().max(255).email().required(),
             country: Joi.string().required().replace(/\s{1,}/g, ''),
             dateOfBirth: Joi.date().format('DD-MM-YYYY').required(),
             gender: Joi.string().valid(['M', 'F']).required(),
@@ -52,146 +60,152 @@ class Authentication {
         return result;
     }
     register(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let result = this.validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm);
             if (result.error === null) {
-                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
-                let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`;
-                let query1 = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`;
-                let query2 = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`;
-                let request = new sql.Request();
-                request.input('mobileNumber', result.value.mobileNumber);
-                request.input('emailAddress', result.value.emailAddress);
-                request.input('nationalID', result.value.nationalID);
-                request.query(query).then((res) => {
-                    request.query(query1).then((res1) => {
-                        request.query(query2).then((res2) => {
-                            let error_msg = ['', '', ''];
-                            let index = 0;
-                            if (res.recordsets[0].length > 0) {
-                                let msg = `Mobile Number ${result.value.mobileNumber}`;
-                                error_msg[index] = msg;
-                                index++;
-                            }
-                            if (res1.recordsets[0].length > 0) {
-                                let msg = `Email Address ${result.value.emailAddress}`;
-                                error_msg[index] = msg;
-                                index++;
-                            }
-                            if (res2.recordsets[0].length > 0) {
-                                let msg = `ID Number ${result.value.nationalID}`;
-                                error_msg[index] = msg;
-                                index++;
-                            }
-                            if (index === 0) {
-                                bcrypt.hash(result.value.password, saltRounds, function (err, hash) {
-                                    if (hash) {
-                                        let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
-                                        let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
-                                                             VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
-                                        let request = new sql.Request();
-                                        request.input('firstName', result.value.firstName);
-                                        request.input('lastName', result.value.lastName);
-                                        request.input('otherName', result.value.otherName);
-                                        request.input('mobileNumber', result.value.mobileNumber);
-                                        request.input('emailAddress', result.value.emailAddress);
-                                        request.input('country', result.value.country);
-                                        request.input('dateOfBirth', DOB);
-                                        request.input('gender', result.value.gender);
-                                        request.input('nationality', result.value.nationality);
-                                        request.input('nationalID', result.value.nationalID);
-                                        request.input('passwordHash', hash);
-                                        request.query(query).then(() => {
-                                            resolve({ type: 'success' });
-                                        }).catch(() => reject({
-                                            type: 'app-crashed',
-                                            reason: 'Database Connection Error'
-                                        }));
-                                    }
-                                    else {
-                                        reject({
-                                            type: 'app-crashed',
-                                            reason: err
-                                        });
-                                    }
-                                });
+                try {
+                    let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`;
+                    let query1 = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`;
+                    let query2 = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`;
+                    let request = new sql.Request();
+                    request.input('mobileNumber', result.value.mobileNumber);
+                    request.input('emailAddress', result.value.emailAddress);
+                    request.input('nationalID', result.value.nationalID);
+                    let res = yield request.query(query);
+                    let res1 = yield request.query(query1);
+                    let res2 = yield request.query(query2);
+                    let error_msg = ['', '', ''];
+                    let index = 0;
+                    if (res.recordsets[0].length > 0) {
+                        let msg = `Mobile Number ${result.value.mobileNumber}`;
+                        error_msg[index] = msg;
+                        index++;
+                    }
+                    if (res1.recordsets[0].length > 0) {
+                        let msg = `Email Address ${result.value.emailAddress}`;
+                        error_msg[index] = msg;
+                        index++;
+                    }
+                    if (res2.recordsets[0].length > 0) {
+                        let msg = `ID Number ${result.value.nationalID}`;
+                        error_msg[index] = msg;
+                        index++;
+                    }
+                    if (index === 0) {
+                        bcrypt.hash(result.value.password, saltRounds, (err, hash) => __awaiter(this, void 0, void 0, function* () {
+                            if (hash) {
+                                try {
+                                    let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                                    let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                                                                VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
+                                    let request = new sql.Request();
+                                    request.input('firstName', result.value.firstName);
+                                    request.input('lastName', result.value.lastName);
+                                    request.input('otherName', result.value.otherName);
+                                    request.input('mobileNumber', result.value.mobileNumber);
+                                    request.input('emailAddress', result.value.emailAddress);
+                                    request.input('country', result.value.country);
+                                    request.input('dateOfBirth', DOB);
+                                    request.input('gender', result.value.gender);
+                                    request.input('nationality', result.value.nationality);
+                                    request.input('nationalID', result.value.nationalID);
+                                    request.input('passwordHash', hash);
+                                    yield request.query(query);
+                                    resolve({ type: 'success' });
+                                }
+                                catch (error) {
+                                    resolve({
+                                        type: 'app-crashed',
+                                        reason: error
+                                    });
+                                }
                             }
                             else {
-                                let reason = '';
-                                error_msg.forEach((value) => {
-                                    if (value) {
-                                        reason += value + ', ';
-                                    }
-                                });
-                                reject({
-                                    type: 'validation-error',
-                                    reason: 'User with ' + reason + ' Exist'
+                                resolve({
+                                    type: 'app-crashed',
+                                    reason: err
                                 });
                             }
-                        }).catch(error => reject({
-                            type: 'app-crashed',
-                            reason: error
                         }));
-                    }).catch(error => reject({
+                    }
+                    else {
+                        let reason = '';
+                        error_msg.forEach((value) => {
+                            if (value) {
+                                reason += value + ', ';
+                            }
+                        });
+                        resolve({
+                            type: 'validation-error',
+                            reason: 'User with ' + reason + ' Exists'
+                        });
+                    }
+                }
+                catch (error) {
+                    resolve({
                         type: 'app-crashed',
                         reason: error
-                    }));
-                }).catch(error => reject({
-                    type: 'app-crashed',
-                    reason: error
-                }));
-                //-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x
+                    });
+                }
             }
             else {
-                reject({
+                resolve({
                     type: 'validation-error',
                     reason: result.error
                 });
             }
-        });
+        }));
     }
     login(user, password) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let result = this.validateLogin(user, password);
             if (result.error === null) {
-                let query = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
-                let request = new sql.Request();
-                request.input('user', result.value.user);
-                request.query(query).then((res) => {
+                try {
+                    let query = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
+                    let request = new sql.Request();
+                    request.input('user', result.value.user);
+                    let res = yield request.query(query);
                     if (res.recordsets[0].length != 0) {
-                        bcrypt.compare(result.value.password, res.recordset[0]['PASSWORD']).then((res) => {
-                            if (res) {
+                        try {
+                            let pass = bcrypt.compare(result.value.password, res.recordset[0]['PASSWORD']);
+                            if (pass) {
                                 resolve({ type: 'success' });
                             }
                             else {
-                                reject({
+                                resolve({
                                     type: 'validation-error',
                                     reason: 'Wrong Credentials'
                                 });
                             }
-                        }).catch(error => reject({
-                            type: 'app-crashed',
-                            reason: error
-                        }));
+                        }
+                        catch (error) {
+                            resolve({
+                                type: 'app-crashed',
+                                reason: error
+                            });
+                        }
                     }
                     else {
-                        reject({
+                        resolve({
                             type: 'validation-error',
                             reason: 'Invalid User'
                         });
                     }
-                }).catch(error => reject({
-                    type: 'app-crashed',
-                    reason: error
-                }));
+                }
+                catch (error) {
+                    resolve({
+                        type: 'app-crashed',
+                        reason: error
+                    });
+                }
             }
             else {
-                reject({
+                resolve({
                     type: 'validation-error',
                     reason: result.error
                 });
             }
-        });
+        }));
     }
     forgotPassword(user) {
         let result = this.validateForgotPassword(user);
