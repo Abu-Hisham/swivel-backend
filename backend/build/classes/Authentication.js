@@ -92,41 +92,40 @@ class Authentication {
                         index++;
                     }
                     if (index === 0) {
-                        bcrypt.hash(result.value.password, saltRounds, (err, hash) => __awaiter(this, void 0, void 0, function* () {
-                            if (hash) {
-                                try {
-                                    let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
-                                    let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                        let pass_hash = bcrypt.hashSync(result.value.password, saltRounds);
+                        if (pass_hash) {
+                            try {
+                                let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                                let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
                                                                 VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
-                                    let request = new sql.Request();
-                                    request.input('firstName', result.value.firstName);
-                                    request.input('lastName', result.value.lastName);
-                                    request.input('otherName', result.value.otherName);
-                                    request.input('mobileNumber', result.value.mobileNumber);
-                                    request.input('emailAddress', result.value.emailAddress);
-                                    request.input('country', result.value.country);
-                                    request.input('dateOfBirth', DOB);
-                                    request.input('gender', result.value.gender);
-                                    request.input('nationality', result.value.nationality);
-                                    request.input('nationalID', result.value.nationalID);
-                                    request.input('passwordHash', hash);
-                                    yield request.query(query);
-                                    resolve({ type: 'success' });
-                                }
-                                catch (error) {
-                                    resolve({
-                                        type: 'app-crashed',
-                                        reason: error
-                                    });
-                                }
+                                let request = new sql.Request();
+                                request.input('firstName', result.value.firstName);
+                                request.input('lastName', result.value.lastName);
+                                request.input('otherName', result.value.otherName);
+                                request.input('mobileNumber', result.value.mobileNumber);
+                                request.input('emailAddress', result.value.emailAddress);
+                                request.input('country', result.value.country);
+                                request.input('dateOfBirth', DOB);
+                                request.input('gender', result.value.gender);
+                                request.input('nationality', result.value.nationality);
+                                request.input('nationalID', result.value.nationalID);
+                                request.input('passwordHash', pass_hash);
+                                yield request.query(query);
+                                resolve({ type: 'success' });
                             }
-                            else {
+                            catch (error) {
                                 resolve({
                                     type: 'app-crashed',
-                                    reason: err
+                                    reason: error
                                 });
                             }
-                        }));
+                        }
+                        else {
+                            resolve({
+                                type: 'app-crashed',
+                                reason: pass_hash.error
+                            });
+                        }
                     }
                     else {
                         let reason = '';
@@ -167,7 +166,7 @@ class Authentication {
                     let res = yield request.query(query);
                     if (res.recordsets[0].length != 0) {
                         try {
-                            let pass = bcrypt.compare(result.value.password, res.recordset[0]['PASSWORD']);
+                            let pass = bcrypt.compareSync(result.value.password, res.recordset[0]['PASSWORD']);
                             if (pass) {
                                 resolve({ type: 'success' });
                             }

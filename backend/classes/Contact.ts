@@ -28,15 +28,15 @@ export class Contact implements IContactUs {
                     request.input('user', result.value.user);
                     let res = await request.query(query);
                     if (res.recordsets[0].length === 1) {
-                        let query: string = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
-                                             VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`;
-                        let request = new sql.Request();
-                        request.input('name', result.value.name);
-                        request.input('email', result.value.email);
-                        request.input('subject', result.value.subject);
-                        request.input('message', result.value.message);
-                        request.input('user', result.value.user);
                         try {
+                            let query: string = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
+                                                 VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`;
+                            let request = new sql.Request();
+                            request.input('name', result.value.name);
+                            request.input('email', result.value.email);
+                            request.input('subject', result.value.subject);
+                            request.input('message', result.value.message);
+                            request.input('user', result.value.user);
                             await request.query(query);
                             resolve({ type: 'success' });
                         } catch (error) {

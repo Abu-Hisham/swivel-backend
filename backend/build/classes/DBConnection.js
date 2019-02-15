@@ -22,12 +22,12 @@ const dbconnection = sql['connect']({
         var ent = new Enterprise_1.Enterprise();
         // ent.corporate("Eclectic Int", "Abd    ul", "https://ekennya.co.ke", "hr@ekenya.co.ke", "070163301   6", "Nairobi").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)});
         // ent.corporate("Eclectic", "Abdulaziz", "https://ekeny.co.ke", "hr@ekenya.co.ke", "0765223124", "Nairobi").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)});
-        usr.register("Salim", "Mwayogwe", "Bahresa", "07016    33026", "abdula@ekenya.co.ke", "Tanzania", "12-03-1993", "M", "Kenyan", "3167   2615", "Zizahry@123", "Zizahry@123").then((res) => { console.log(res); }).catch((err) => { console.log(err); });
+        // usr.register("Boniface","Ouko","Bahresa","07016    33516","abduli@ekenya.co.ke", "Tanzania","12-03-1993", "M", "Kenyan","3167   2625","Zizahry@123", "Zizahry@123").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)});
         // usr.register("Patrick","James","Kimani","0701633367","patrick@ekenya.co.ke", "Kenya","03-11-1991", "M", "Kenyan","31672624","Zizahry@123", "Zizahry@123").
         // then((res)=>{console.log(res)}).
         // catch((err)=>{console.log(err)}));
         // usr.register("Abdulaziz","Mohd","Ra   jab","070163    3016","abdull@ekenya.co.ke", "Ke     nya","13-06-1993", "M", "Kenyan","336    72609","Zizahry@123", "Zizahry@123").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)});
-        // usr.login("abdull@ekenya.co.ke", "Zizahry@123").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)})
+        usr.login("abduli@ekenya.co.ke", "Zizahry@123").then((res) => { console.log(res); }).catch((err) => { console.log(err); });
         // msg.contactForm("Abdul Aziz", "abdo@ekenya.co.ke", "My subject", "Here's my Message", "0710633018").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)})
     }
 });

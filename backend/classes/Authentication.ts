@@ -90,8 +90,8 @@ export class Authentication implements IAuthentication {
                         index++;
                     }
                     if (index === 0) {
-                        bcrypt.hash(result.value.password, saltRounds, async (err, hash) => {
-                            if (hash) {
+                        let pass_hash = bcrypt.hashSync(result.value.password, saltRounds);
+                            if (pass_hash) {
                                 try {
                                         let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
                                         let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
@@ -107,7 +107,7 @@ export class Authentication implements IAuthentication {
                                         request.input('gender', result.value.gender);
                                         request.input('nationality', result.value.nationality);
                                         request.input('nationalID', result.value.nationalID);
-                                        request.input('passwordHash', hash);
+                                        request.input('passwordHash', pass_hash);
                                         await request.query(query);
                                         resolve({ type: 'success' });
                                 } catch (error) {
@@ -119,11 +119,10 @@ export class Authentication implements IAuthentication {
                             } else {
                                 resolve({
                                     type: 'app-crashed',
-                                    reason: err
+                                    reason: pass_hash.error
                                 });
                             }
 
-                        });
                     }
                     else {
                         let reason = '';
@@ -164,7 +163,7 @@ export class Authentication implements IAuthentication {
                     let res = await request.query(query);
                         if (res.recordsets[0].length != 0) {
                             try {
-                                    let pass = bcrypt.compare(result.value.password, res.recordset[0]['PASSWORD']);
+                                    let pass = bcrypt.compareSync(result.value.password, res.recordset[0]['PASSWORD']);
                                     if (pass) {
                                         resolve({ type: 'success' });
                                     } else {
