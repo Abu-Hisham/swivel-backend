@@ -18,7 +18,7 @@ export interface IKentaPayEnterprise {
      *
      * @returns Promise<ActivityResponse>
      */
-    corporateRequest(companyName: string, contactPersonsName: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string): Promise<ActivityResponse>;
+    corporateRequest(companyName: string, contactPersonsName: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, user?: string): Promise<ActivityResponse>;
 
     /**
      * corporate
@@ -34,7 +34,7 @@ export interface IKentaPayEnterprise {
      *
      * @returns Promise<ActivityResponse>
      */
-    corporate(name: string, company: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, monthlyVolumes: string, averageTransactions: string): Promise<ActivityResponse>;
+    corporate(name: string, company: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, monthlyVolumes: string, averageTransactions: string, user?: string): Promise<ActivityResponse>;
 
     /**
      * merchantRequest
@@ -48,7 +48,7 @@ export interface IKentaPayEnterprise {
      *
      * @returns Promise<ActivityResponse>
      */
-    merchantRequest(companyName: string, contactPersonsName: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string): Promise<ActivityResponse>;
+    merchantRequest(companyName: string, contactPersonsName: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, user?: string): Promise<ActivityResponse>;
 
     /**
      * merchant
@@ -64,7 +64,7 @@ export interface IKentaPayEnterprise {
      *
      * @returns Promise<ActivityResponse>
      */
-    merchant(name: string, company: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, monthlyVolumes: string, averageTransactions: string): Promise<ActivityResponse>;
+    merchant(name: string, company: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, monthlyVolumes: string, averageTransactions: string,user?: string): Promise<ActivityResponse>;
 
 
 }
