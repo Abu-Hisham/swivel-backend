@@ -113,7 +113,7 @@ export class Enterprise implements IKentaPayEnterprise {
                     reason: result.error
                 });
             }
-        })
+        });
     }
 
     merchantRequest(companyName, contactPersonsName, companyUrl, emailAddress, phoneNumber, county, user): Promise<ActivityResponse> {

@@ -15,6 +15,16 @@ const moment = require("moment");
 const sql = require("mssql");
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const counties = [
+    'Mombasa County', 'Kwale County', 'Kilifi County', 'Tana River County', 'Lamu County', 'Taita Taveta County',
+    'Garissa County', 'Wajir County', 'Mandera County', 'Marsabit County', 'Isiolo County', 'Meru County',
+    'Tharaka Nithi County', 'Embu County', 'Kitui County', 'Machakos County', 'Makueni County', 'Nyandarua County',
+    'Nyeri County', 'Kirinyaga County', 'Murang A County', 'Kiambu County', 'Turkana County', 'West Pokot County',
+    'Siaya County', 'Trans Nzoia County', 'Uasin Gishu County', 'Elgeyo Marakwet County', 'Nandi County',
+    'Baringo County', 'Laikipia County', 'Nakuru County', 'Narok County', 'Kajiado County', 'Kericho County',
+    'Bomet County', 'Kakamega County', 'Vihiga County', 'Bungoma County', 'Busia County', 'Kisumu County',
+    'Homabay County', 'Migori County', 'Kisii County', 'Nyamira County', 'Nairobi County', 'Samburu County'
+];
 class Authentication {
     validateLogin(user, password) {
         const loginSchema = Joi.object().keys({
@@ -22,8 +32,7 @@ class Authentication {
                 Joi.string().min(10).max(15).regex(/[0-9]/).required()]),
             password: Joi.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
         });
-        const result = Joi.validate({ user, password }, loginSchema);
-        return result;
+        return Joi.validate({ user, password }, loginSchema);
     }
     validateRegistration(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm) {
         const registrationSchema = Joi.object().keys({
@@ -40,15 +49,13 @@ class Authentication {
             password: Joi.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).required().replace(/\s{1,}/g, ''),
             passwordConfirm: Joi.string().min(8).valid(Joi.ref('password')).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).required().replace(/\s{1,}/g, '')
         });
-        const result = Joi.validate({ firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm }, registrationSchema);
-        return result;
+        return Joi.validate({ firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm }, registrationSchema);
     }
     validateForgotPassword(user) {
         const forgotPasswordSchema = Joi.object().keys({
             user: Joi.alternatives([Joi.string().max(255).email({ minDomainAtoms: 2 }).required(), Joi.string().min(10).max(15).regex(/[0-9]/).required().replace(/\s{1,}/g, '')]),
         });
-        const result = Joi.validate({ user }, forgotPasswordSchema);
-        return result;
+        return Joi.validate({ user }, forgotPasswordSchema);
     }
     validateNewPassword(token, password, passwordConfirm) {
         const newPasswordSchema = Joi.object().keys({
@@ -56,8 +63,7 @@ class Authentication {
             password: Joi.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).required().replace(/\s{1,}/g, ''),
             passwordConfirm: Joi.string().min(8).valid(Joi.ref('password')).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/).required().replace(/\s{1,}/g, '')
         });
-        const result = Joi.validate({ token, password, passwordConfirm }, newPasswordSchema);
-        return result;
+        return Joi.validate({ token, password, passwordConfirm }, newPasswordSchema);
     }
     register(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -94,31 +100,23 @@ class Authentication {
                     if (index === 0) {
                         let pass_hash = bcrypt.hashSync(result.value.password, saltRounds);
                         if (pass_hash) {
-                            try {
-                                let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
-                                let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
+                            let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                            let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
                                                                 VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
-                                let request = new sql.Request();
-                                request.input('firstName', result.value.firstName);
-                                request.input('lastName', result.value.lastName);
-                                request.input('otherName', result.value.otherName);
-                                request.input('mobileNumber', result.value.mobileNumber);
-                                request.input('emailAddress', result.value.emailAddress);
-                                request.input('country', result.value.country);
-                                request.input('dateOfBirth', DOB);
-                                request.input('gender', result.value.gender);
-                                request.input('nationality', result.value.nationality);
-                                request.input('nationalID', result.value.nationalID);
-                                request.input('passwordHash', pass_hash);
-                                yield request.query(query);
-                                resolve({ type: 'success' });
-                            }
-                            catch (error) {
-                                resolve({
-                                    type: 'app-crashed',
-                                    reason: error
-                                });
-                            }
+                            let request = new sql.Request();
+                            request.input('firstName', result.value.firstName);
+                            request.input('lastName', result.value.lastName);
+                            request.input('otherName', result.value.otherName);
+                            request.input('mobileNumber', result.value.mobileNumber);
+                            request.input('emailAddress', result.value.emailAddress);
+                            request.input('country', result.value.country);
+                            request.input('dateOfBirth', DOB);
+                            request.input('gender', result.value.gender);
+                            request.input('nationality', result.value.nationality);
+                            request.input('nationalID', result.value.nationalID);
+                            request.input('passwordHash', pass_hash);
+                            yield request.query(query);
+                            resolve({ type: 'success' });
                         }
                         else {
                             resolve({
@@ -165,22 +163,14 @@ class Authentication {
                     request.input('user', result.value.user);
                     let res = yield request.query(query);
                     if (res.recordsets[0].length != 0) {
-                        try {
-                            let pass = bcrypt.compareSync(result.value.password, res.recordset[0]['PASSWORD']);
-                            if (pass) {
-                                resolve({ type: 'success' });
-                            }
-                            else {
-                                resolve({
-                                    type: 'validation-error',
-                                    reason: 'Wrong Credentials'
-                                });
-                            }
+                        let pass = bcrypt.compareSync(result.value.password, res.recordset[0]['PASSWORD']);
+                        if (pass) {
+                            resolve({ type: 'success' });
                         }
-                        catch (error) {
+                        else {
                             resolve({
-                                type: 'app-crashed',
-                                reason: error
+                                type: 'validation-error',
+                                reason: 'Wrong Credentials'
                             });
                         }
                     }

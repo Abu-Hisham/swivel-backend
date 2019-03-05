@@ -18,46 +18,25 @@ class Contact {
             email: Joi.string().email().required(),
             subject: Joi.string().min(3).max(255).required().replace(/\s{2,}/g, ''),
             message: Joi.string().min(3).required().replace(/\s{2,}/g, ' '),
-            user: Joi.string().allow('')
+            user: Joi.any().allow('')
         });
-        const result = Joi.validate({ name, email, subject, message, user }, schema);
-        return result;
+        return Joi.validate({ name, email, subject, message, user }, schema);
     }
     contactForm(name, email, subject, message, user) {
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             let result = this.validateInput(name, email, subject, message, user);
             if (result.error === null) {
                 try {
-                    let query = `SELECT * FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
+                    let query = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
+                                                 VALUES(@name, @email, @subject, @message,(SELECT [IDENTIFICATIONID] FROM [TBCUSTOMERS] WHERE [EMAILADDRESS]=@user OR [CUSTOMERNO]=@user),GETDATE());`;
                     let request = new sql.Request();
+                    request.input('name', result.value.name);
+                    request.input('email', result.value.email);
+                    request.input('subject', result.value.subject);
+                    request.input('message', result.value.message);
                     request.input('user', result.value.user);
-                    let res = yield request.query(query);
-                    if (res.recordsets[0].length === 1) {
-                        try {
-                            let query = `INSERT into TBCONTACTMESSAGES(Name, Email, Subject, Message, RegisteredUserID, SentAt) 
-                                                 VALUES(@name, @email, @subject, @message,(SELECT ID FROM TBCUSTOMERS WHERE EMAILADDRESS=@user OR CUSTOMERNO=@user),GETDATE());`;
-                            let request = new sql.Request();
-                            request.input('name', result.value.name);
-                            request.input('email', result.value.email);
-                            request.input('subject', result.value.subject);
-                            request.input('message', result.value.message);
-                            request.input('user', result.value.user);
-                            yield request.query(query);
-                            resolve({ type: 'success' });
-                        }
-                        catch (error) {
-                            resolve({
-                                type: 'app-crashed',
-                                reason: error
-                            });
-                        }
-                    }
-                    else {
-                        resolve({
-                            type: 'validation-error',
-                            reason: 'Invalid User'
-                        });
-                    }
+                    yield request.query(query);
+                    resolve({ type: 'success' });
                 }
                 catch (error) {
                     resolve({
@@ -69,7 +48,7 @@ class Contact {
             else {
                 resolve({
                     type: 'validation-error',
-                    reason: result.error
+                    reason: 'Invalid User'
                 });
             }
         }));

@@ -66,5 +66,6 @@ export interface IKentaPayEnterprise {
      */
     merchant(name: string, company: string, companyUrl: string, emailAddress: string, phoneNumber: string, county: string, monthlyVolumes: string, averageTransactions: string,user?: string): Promise<ActivityResponse>;
 
+    // console.log(results['firstName'], results['lastName'], results['otherName']);
 
 }
