@@ -1,9 +1,10 @@
 import { IAuthentication } from "../interfaces/IAuthentication";
 import { ActivityResponse } from "../models/ActivityResponse";
+import { dbconnection } from './DBConnection';
 const BaseJoi = require('joi');
 const Extension = require('joi-date-extensions');
 const Joi = BaseJoi.extend(Extension);
-import moment = require('moment');
+import * as moment from 'moment';
 import sql = require('mssql');
 import passHash = require('password-hash');
 const bcrypt = require('bcrypt');
@@ -48,6 +49,22 @@ export class Authentication implements IAuthentication {
         return Joi.validate({ firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm }, registrationSchema);
     }
 
+    private validateUpdate(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, userID: string) {
+        const registrationSchema = Joi.object().keys({
+            firstName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            lastName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            otherName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            mobileNumber: Joi.string().min(10).max(15).regex(/[0-9]/).required().replace(/\s{1,}/g, ''),
+            emailAddress: Joi.string().max(255).email().required(),
+            country: Joi.string().required().replace(/\s{1,}/g, ''),
+            dateOfBirth: Joi.date().format('DD-MM-YYYY').required(),
+            gender: Joi.string().valid(['M', 'F']).required(),
+            nationality: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            nationalID: Joi.string().length(8).regex(/[0-9]{8}/).required().replace(/\s{1,}/g, ''),
+            userID: Joi.string().regex(/[0-9]/).required().replace(/\s{1,}/g, '')
+        });
+        return Joi.validate({ firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, userID}, registrationSchema);
+    }
    private validateForgotPassword(user: string) {
         const forgotPasswordSchema = Joi.object().keys({
             user: Joi.alternatives([Joi.string().max(255).email({ minDomainAtoms: 2 }).required(), Joi.string().min(10).max(15).regex(/[0-9]/).required().replace(/\s{1,}/g, '')]),
@@ -72,7 +89,7 @@ export class Authentication implements IAuthentication {
                     let query: string = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`;
                     let query1: string = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`;
                     let query2: string = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`;
-                    let request = new sql.Request();
+                    let request = new sql.Request(dbconnection);
                     request.input('mobileNumber', result.value.mobileNumber);
                     request.input('emailAddress', result.value.emailAddress);
                     request.input('nationalID', result.value.nationalID);
@@ -103,7 +120,7 @@ export class Authentication implements IAuthentication {
                             let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
                             let query: string = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
                                                                 VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
-                            let request = new sql.Request();
+                            let request = new sql.Request(dbconnection);
                             request.input('firstName', result.value.firstName);
                             request.input('lastName', result.value.lastName);
                             request.input('otherName', result.value.otherName);
@@ -153,13 +170,59 @@ export class Authentication implements IAuthentication {
         });
     }
 
+    updateUser(firstName: string, lastName: string, otherName: string, mobileNumber: string, emailAddress: string, country: string, dateOfBirth: string, gender: string, nationality: string, nationalID: string, userID: string): Promise<ActivityResponse> {
+        return new Promise<ActivityResponse>(async (resolve, reject) => {
+            let result = this.validateUpdate(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, userID);
+            if (result.error === null) {
+                try {
+                            let query =`SELECT * FROM [TBCUSTOMERS] WHERE [ID]=@userID`;
+                            let request = new sql.Request(dbconnection);
+                            request.input('userID', result.value.userID);
+                            let res = await request.query(query);
+                            if (res.recordsets[0].length > 0) {
+                                let DOB: Date = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                                let query1: string = `UPDATE [TBCUSTOMERS] set [FIRSTNAME]=@firstName,[LASTNAME]=@lastName,[OTHERNAMES]=@otherName, [CUSTOMERNO]=@mobileNumber,[EMAILADDRESS]=@emailAddress,[COUNTRY]=@country,[DATEOFBIRTH]=@dateOfBirth,[GENDER]=@gender,[NATIONALITY]=@nationality,[IDENTIFICATIONID]=@nationalID WHERE [ID]=@userID `;
+                                request.input('firstName', result.value.firstName);
+                                request.input('lastName', result.value.lastName);
+                                request.input('otherName', result.value.otherName);
+                                request.input('mobileNumber', result.value.mobileNumber);
+                                request.input('emailAddress', result.value.emailAddress);
+                                request.input('country', result.value.country);
+                                request.input('dateOfBirth', DOB);
+                                request.input('gender', result.value.gender);
+                                request.input('nationality', result.value.nationality);
+                                request.input('nationalID', result.value.nationalID);
+                                await request.query(query1);
+                                resolve({ type: 'success' });
+                            } else {
+                                resolve({
+                                    type: 'validation-error',
+                                    reason: 'User with the given ID doesnt Exist'
+                                });
+                            }
+
+                } catch (error) {
+                    resolve({
+                        type: 'app-crashed',
+                        reason: error
+                    });
+                }
+            }
+            else {
+                resolve({
+                    type: 'validation-error',
+                    reason: result.error
+                });
+            }
+        });
+    }
     login(user: string, password: string): Promise<ActivityResponse> {
         return new Promise<ActivityResponse>(async (resolve, reject) => {
             let result = this.validateLogin(user, password);
             if (result.error === null) {
                 try {
                     let query: string = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
-                    let request = new sql.Request();
+                    let request = new sql.Request(dbconnection);
                     request.input('user', result.value.user);
                     let res = await request.query(query);
                     if (res.recordsets[0].length != 0) {

@@ -1,0 +1,249 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Swivel Backend Portal API",
+    "description": "Backend API for managing users, transactions...",
+    "version": "1.0.0"
+  },
+  "host": "localhost:4000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "definitions": {
+    "user": {
+      "required": [
+        "firstName",
+        "lastName",
+        "otherName",
+        "mobileNumber",
+        "emailAddress",
+        "country",
+        "dateOfBirth",
+        "gender",
+        "nationality",
+        "nationalID",
+        "password",
+        "passwordConfirm"
+      ],
+      "properties": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "otherName": {
+          "type": "string"
+        },
+        "mobileNumber": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "dateOfBirth": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "nationality": {
+          "type": "string"
+        },
+        "nationalID": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "passwordConfirm": {
+          "type": "string"
+        }
+      }
+    },
+    "user_edited": {
+      "required": [
+        "firstName",
+        "lastName",
+        "otherName",
+        "mobileNumber",
+        "emailAddress",
+        "country",
+        "dateOfBirth",
+        "gender",
+        "nationality",
+        "nationalID"
+      ],
+      "properties": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "otherName": {
+          "type": "string"
+        },
+        "mobileNumber": {
+          "type": "string"
+        },
+        "emailAddress": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "dateOfBirth": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "nationality": {
+          "type": "string"
+        },
+        "nationalID": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "passwordConfirm": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "Get Specific User"
+        ],
+        "summary": "Get a specific user",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        },
+        "content": {
+          "application/json": {}
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the id of the user",
+            "required": true,
+            "type": "integer"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Edit User"
+        ],
+        "summary": "Edit an Existing User",
+        "responses": {
+          "201": {
+            "description": "Modified"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        },
+        "content": {
+          "application/json": {}
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Specifies the id of the user",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "User",
+            "description": "User params to create new User",
+            "in": "body",
+            "required": "true",
+            "schema": {
+              "$ref": "#definitions/user_edited"
+            }
+          }
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Get Users"
+        ],
+        "summary": "List all registered Users",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        },
+        "content": {
+          "application/json": {}
+        },
+        "parameters": []
+      },
+      "post": {
+        "tags": [
+          "Add User"
+        ],
+        "summary": "Add a single user",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        },
+        "content": {
+          "application/json": {}
+        },
+        "parameters": [
+          {
+            "name": "User",
+            "description": "User params to create new User",
+            "in": "body",
+            "required": "true",
+            "schema": {
+              "$ref": "#definitions/user"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

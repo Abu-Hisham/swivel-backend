@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const DBConnection_1 = require("./DBConnection");
 const BaseJoi = require('joi');
 const Extension = require('joi-date-extensions');
 const Joi = BaseJoi.extend(Extension);
@@ -51,6 +52,22 @@ class Authentication {
         });
         return Joi.validate({ firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, password, passwordConfirm }, registrationSchema);
     }
+    validateUpdate(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, userID) {
+        const registrationSchema = Joi.object().keys({
+            firstName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            lastName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            otherName: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            mobileNumber: Joi.string().min(10).max(15).regex(/[0-9]/).required().replace(/\s{1,}/g, ''),
+            emailAddress: Joi.string().max(255).email().required(),
+            country: Joi.string().required().replace(/\s{1,}/g, ''),
+            dateOfBirth: Joi.date().format('DD-MM-YYYY').required(),
+            gender: Joi.string().valid(['M', 'F']).required(),
+            nationality: Joi.string().min(3).required().replace(/\s{1,}/g, ''),
+            nationalID: Joi.string().length(8).regex(/[0-9]{8}/).required().replace(/\s{1,}/g, ''),
+            userID: Joi.string().regex(/[0-9]/).required().replace(/\s{1,}/g, '')
+        });
+        return Joi.validate({ firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, userID }, registrationSchema);
+    }
     validateForgotPassword(user) {
         const forgotPasswordSchema = Joi.object().keys({
             user: Joi.alternatives([Joi.string().max(255).email({ minDomainAtoms: 2 }).required(), Joi.string().min(10).max(15).regex(/[0-9]/).required().replace(/\s{1,}/g, '')]),
@@ -73,7 +90,7 @@ class Authentication {
                     let query = `SELECT * FROM TBCUSTOMERS WHERE (CUSTOMERNO=@mobileNumber)`;
                     let query1 = `SELECT * FROM TBCUSTOMERS WHERE (EMAILADDRESS=@emailAddress)`;
                     let query2 = `SELECT * FROM TBCUSTOMERS WHERE (IDENTIFICATIONID=@nationalID)`;
-                    let request = new sql.Request();
+                    let request = new sql.Request(DBConnection_1.dbconnection);
                     request.input('mobileNumber', result.value.mobileNumber);
                     request.input('emailAddress', result.value.emailAddress);
                     request.input('nationalID', result.value.nationalID);
@@ -103,7 +120,7 @@ class Authentication {
                             let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
                             let query = `INSERT into [TBCUSTOMERS] ([FIRSTNAME],[LASTNAME],[OTHERNAMES], [CUSTOMERNO],[EMAILADDRESS],[COUNTRY],[DATEOFBIRTH],[GENDER],[NATIONALITY],[IDENTIFICATIONID],[PASSWORD]) 
                                                                 VALUES(@firstName, @lastName, @otherName, @mobileNumber, @emailAddress, @country, @dateOfBirth, @gender, @nationality, @nationalID, @passwordHash);`;
-                            let request = new sql.Request();
+                            let request = new sql.Request(DBConnection_1.dbconnection);
                             request.input('firstName', result.value.firstName);
                             request.input('lastName', result.value.lastName);
                             request.input('otherName', result.value.otherName);
@@ -153,13 +170,60 @@ class Authentication {
             }
         }));
     }
+    updateUser(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, userID) {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            let result = this.validateUpdate(firstName, lastName, otherName, mobileNumber, emailAddress, country, dateOfBirth, gender, nationality, nationalID, userID);
+            if (result.error === null) {
+                try {
+                    let query = `SELECT * FROM [TBCUSTOMERS] WHERE [ID]=@userID`;
+                    let request = new sql.Request(DBConnection_1.dbconnection);
+                    request.input('userID', result.value.userID);
+                    let res = yield request.query(query);
+                    if (res.recordsets[0].length > 0) {
+                        let DOB = moment(dateOfBirth, 'DD-MM-YYYY').toDate();
+                        let query1 = `UPDATE [TBCUSTOMERS] set [FIRSTNAME]=@firstName,[LASTNAME]=@lastName,[OTHERNAMES]=@otherName, [CUSTOMERNO]=@mobileNumber,[EMAILADDRESS]=@emailAddress,[COUNTRY]=@country,[DATEOFBIRTH]=@dateOfBirth,[GENDER]=@gender,[NATIONALITY]=@nationality,[IDENTIFICATIONID]=@nationalID WHERE [ID]=@userID `;
+                        request.input('firstName', result.value.firstName);
+                        request.input('lastName', result.value.lastName);
+                        request.input('otherName', result.value.otherName);
+                        request.input('mobileNumber', result.value.mobileNumber);
+                        request.input('emailAddress', result.value.emailAddress);
+                        request.input('country', result.value.country);
+                        request.input('dateOfBirth', DOB);
+                        request.input('gender', result.value.gender);
+                        request.input('nationality', result.value.nationality);
+                        request.input('nationalID', result.value.nationalID);
+                        yield request.query(query1);
+                        resolve({ type: 'success' });
+                    }
+                    else {
+                        resolve({
+                            type: 'validation-error',
+                            reason: 'User with the given ID doesnt Exist'
+                        });
+                    }
+                }
+                catch (error) {
+                    resolve({
+                        type: 'app-crashed',
+                        reason: error
+                    });
+                }
+            }
+            else {
+                resolve({
+                    type: 'validation-error',
+                    reason: result.error
+                });
+            }
+        }));
+    }
     login(user, password) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             let result = this.validateLogin(user, password);
             if (result.error === null) {
                 try {
                     let query = `SELECT PASSWORD FROM TBCUSTOMERS WHERE CUSTOMERNO=@user OR EMAILADDRESS=@user`;
-                    let request = new sql.Request();
+                    let request = new sql.Request(DBConnection_1.dbconnection);
                     request.input('user', result.value.user);
                     let res = yield request.query(query);
                     if (res.recordsets[0].length != 0) {

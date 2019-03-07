@@ -8,75 +8,101 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express = require("express");
+const Authentication_1 = require("../../../classes/Authentication");
 const sql = require('mssql');
-// import * as conn from '../../../classes/DBConnection';
-const conn = {
-    server: 'localhost',
-    user: 'root',
-    password: 'pass',
-    database: 'swivel',
-    options: {
-        encrypt: true
-    }
-};
-class User {
-    constructor() {
-        this.router = express.Router();
-        this.router.get('/', this.getAllUsers);
-        this.router.post('/api/users', this.save);
-        this.router.get('/api/users/:id', this.getSingleUser);
-        this.router.delete('/app/users/:id', this.delete);
-    }
-    getAllUsers(req, response, next) {
-    }
-    getSingleUser(req, response, next) { }
-    save(req, response, next) {
-    }
-    delete(req, response, next) { }
-}
+const DBConnection_1 = require("../../../classes/DBConnection");
 exports.default = [
     {
-        path: "/api/users/:page/:limit",
+        path: "/api/users",
         method: "get",
         handler: ((req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
                 let page = req.params.page;
                 let limit = req.params.limit;
-                let pool = yield sql.connect(conn);
-                let request = yield new sql.Request(pool);
+                let request = yield new sql.Request(DBConnection_1.dbconnection);
                 request.stream = true;
                 request.query(`SELECT * FROM [TBCUSTOMERS]`);
-                let index = 0;
+                let index = 1;
                 let results = {};
                 request.on('recordset', columns => {
                 });
                 request.on('row', row => {
-                    if (index <= ((page * limit) - 1)) {
-                        results[index += 1] = {
-                            'firstName': row['FIRSTNAME'],
-                            'lastName': row['LASTNAME'],
-                            'otherName': row['OTHERNAMES'],
-                            'emailAddress': row['EMAILADDRESS'],
-                            'mobileNumber': row['CUSTOMERNO'],
-                            'idNumber': row['IDENTIFICATIONID'],
-                            'country': row['COUNTRY'],
-                            'nationality': row['NATIONALITY'],
-                            'dateOfBirth': row['DATEOFBIRTH'],
-                            'gender': row['GENDER']
-                        };
-                    }
+                    results[index] = {
+                        'firstName': row['FIRSTNAME'],
+                        'lastName': row['LASTNAME'],
+                        'otherName': row['OTHERNAMES'],
+                        'emailAddress': row['EMAILADDRESS'],
+                        'mobileNumber': row['CUSTOMERNO'],
+                        'idNumber': row['IDENTIFICATIONID'],
+                        'country': row['COUNTRY'],
+                        'nationality': row['NATIONALITY'],
+                        'dateOfBirth': row['DATEOFBIRTH'],
+                        'gender': row['GENDER']
+                    };
+                    index += 1;
                 });
                 request.on('error', err => {
                 });
                 request.on('done', result => {
-                    // res.write(JSON.stringify(results));
-                    res.send(results);
-                    res.end();
+                    res.status(200).send(results).end();
                 });
             }
             catch (error) {
-                res.status(500).send();
+                res.status(500).send(error.message);
+            }
+        }))
+    },
+    {
+        path: "/api/users/:id",
+        method: "get",
+        handler: ((req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                let request = yield new sql.Request(DBConnection_1.dbconnection);
+                let query = `SELECT [FIRSTNAME] as firstName, [LASTNAME] as lastName, [OTHERNAMES] as otherName, [EMAILADDRESS] as emailAddress,[CUSTOMERNO] as mobileNumber,[IDENTIFICATIONID] as idNumber, [COUNTRY] as country, [NATIONALITY] as nationality, [DATEOFBIRTH] as dateOfBirth, [GENDER] as gender FROM [TBCUSTOMERS] WHERE ID=@userId`;
+                request.input('userId', req.params.id);
+                let result = yield request.query(query);
+                res.send(result.recordset[0]);
+                res.status(200).end();
+            }
+            catch (error) {
+            }
+        }))
+    },
+    {
+        path: "/api/users",
+        method: "post",
+        handler: ((req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                var usr = new Authentication_1.Authentication();
+                let response = yield usr.register(req.body['firstName'], req.body['lastName'], req.body['otherName'], req.body['mobileNumber'], req.body['emailAddress'], req.body['country'], req.body['dateOfBirth'], req.body['gender'], req.body['nationality'], req.body['nationalID'], req.body['password'], req.body['passwordConfirm']);
+                if (response.type === 'success') {
+                    res.status(201).send(req.body).end();
+                }
+                else {
+                    res.status(500).send(response).end();
+                }
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }))
+    },
+    {
+        path: "/api/users/:id",
+        method: "put",
+        handler: ((req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                var usr = new Authentication_1.Authentication();
+                let response = yield usr.updateUser(req.body['firstName'], req.body['lastName'], req.body['otherName'], req.body['mobileNumber'], req.body['emailAddress'], req.body['country'], req.body['dateOfBirth'], req.body['gender'], req.body['nationality'], req.body['idNumber'], req.params.id);
+                if (response.type === 'success') {
+                    res.status(201).send(response).end();
+                }
+                else {
+                    res.status(500).send(response).end();
+                }
+            }
+            catch (error) {
+                console.log(error);
             }
         }))
     }

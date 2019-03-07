@@ -1,59 +1,29 @@
 import * as express from 'express';
 import { Request, Response, NextFunction } from "express";
+import { Authentication } from '../../../classes/Authentication';
 import { HTTP400Error, HTTP401Error } from "../../utils/httpErrors";
 import { PreparedStatement } from 'mssql';
 import { string, any } from 'joi';
 import { log } from 'util';
 const sql = require('mssql');
-// import * as conn from '../../../classes/DBConnection';
-const conn = {
-    server: 'localhost',
-    user: 'root',
-    password: 'pass',
-    database: 'swivel',
-    options: {
-        encrypt: true
-    }
-}
-class User {
-    router: express.Router;
-
-    constructor() {
-        this.router = express.Router();
-        this.router.get('/', this.getAllUsers);
-        this.router.post('/api/users', this.save);
-        this.router.get('/api/users/:id', this.getSingleUser);
-        this.router.delete('/app/users/:id', this.delete)
-    }
-    private getAllUsers(req: Request, response: express.Response, next: express.NextFunction) {
-
-    }
-    private getSingleUser(req: Request, response: express.Response, next: express.NextFunction) { }
-    private save(req: Request, response: express.Response, next: express.NextFunction) {
-    }
-    private delete(req: Request, response: express.Response, next: express.NextFunction) { }
-}
-
+import { dbconnection } from '../../../classes/DBConnection';
 export default [
     {
-        path: "/api/users/:page/:limit",
+        path: "/api/users",
         method: "get",
         handler: (async (req: Request, res: Response, next: NextFunction) => {
             try {
-                let page = req.params.page;
-                let limit = req.params.limit;
-                let pool = await sql.connect(conn);
-                let request = await new sql.Request(pool);
+                let page: number = req.params.page;
+                let limit : number = req.params.limit;
+                let request = await new sql.Request(dbconnection);
                 request.stream = true;
                 request.query(`SELECT * FROM [TBCUSTOMERS]`);
-                let index = 0
+                let index = 1
                 let results = {}
                 request.on('recordset', columns => {
-
                 })
                 request.on('row', row => {
-                    if (index <= ((page * limit) - 1)) {
-                        results[index += 1] = {
+                        results[index] = {
                             'firstName': row['FIRSTNAME'],
                             'lastName': row['LASTNAME'],
                             'otherName': row['OTHERNAMES'],
@@ -65,19 +35,68 @@ export default [
                             'dateOfBirth': row['DATEOFBIRTH'],
                             'gender': row['GENDER']
                         }
-                    }
+                        index += 1
                 });
                 request.on('error', err => {
                 });
                 request.on('done', result => {
-                    res.send(results)
-                    res.end();
+                    res.status(200).send(results).end();
                 });
             } catch (error) {
-                res.status(500).send();
+                res.status(500).send(error.message);
             }
         })
 
+    },
+    {
+        path: "/api/users/:id",
+        method: "get",
+        handler: (async (req: Request, res: Response, next: NextFunction) => {
+            try {
+                let request = await new sql.Request(dbconnection);
+                let query = `SELECT [FIRSTNAME] as firstName, [LASTNAME] as lastName, [OTHERNAMES] as otherName, [EMAILADDRESS] as emailAddress,[CUSTOMERNO] as mobileNumber,[IDENTIFICATIONID] as idNumber, [COUNTRY] as country, [NATIONALITY] as nationality, [DATEOFBIRTH] as dateOfBirth, [GENDER] as gender FROM [TBCUSTOMERS] WHERE ID=@userId`
+                request.input('userId', req.params.id)
+                let result = await request.query(query);
+                res.send(result.recordset[0]);
+                res.status(200).end();
+            } catch (error) {
+
+            }
+        })
+    },
+    {
+        path: "/api/users",
+        method: "post",
+        handler: (async (req: Request, res: Response, next: NextFunction) => {
+            try {
+                var usr = new Authentication()
+                let response = await usr.register(req.body['firstName'], req.body['lastName'], req.body['otherName'], req.body['mobileNumber'], req.body['emailAddress'], req.body['country'], req.body['dateOfBirth'], req.body['gender'], req.body['nationality'], req.body['nationalID'], req.body['password'], req.body['passwordConfirm']);
+                if (response.type === 'success') {
+                    res.status(201).send(req.body).end();
+                } else {
+                    res.status(500).send(response).end();
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        })
+    },
+    {
+        path: "/api/users/:id",
+        method: "put",
+        handler: (async (req: Request, res: Response, next: NextFunction) => {
+            try {
+                var usr = new Authentication()
+                let response = await usr.updateUser(req.body['firstName'], req.body['lastName'], req.body['otherName'], req.body['mobileNumber'], req.body['emailAddress'], req.body['country'], req.body['dateOfBirth'], req.body['gender'], req.body['nationality'], req.body['idNumber'], req.params.id);
+                if (response.type === 'success') {
+                    res.status(201).send(response).end();
+                } else {
+                    res.status(500).send(response).end();
+                }
+            } catch (error) {
+                console.log(error)
+            }
+        })
     }
 ];
 
