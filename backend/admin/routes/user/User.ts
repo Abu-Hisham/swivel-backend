@@ -83,7 +83,7 @@ export default [
     },
     {
         path: "/api/users/:id",
-        method: "put",
+        method: "post",
         handler: (async (req: Request, res: Response, next: NextFunction) => {
             try {
                 var usr = new Authentication()

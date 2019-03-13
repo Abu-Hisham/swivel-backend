@@ -89,7 +89,7 @@ exports.default = [
     },
     {
         path: "/api/users/:id",
-        method: "put",
+        method: "post",
         handler: ((req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
                 var usr = new Authentication_1.Authentication();
