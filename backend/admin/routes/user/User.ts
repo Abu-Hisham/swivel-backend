@@ -19,11 +19,11 @@ export default [
                 request.stream = true;
                 request.query(`SELECT * FROM [TBCUSTOMERS]`);
                 let index = 1
-                let results = {}
+                let results: any[] = []
                 request.on('recordset', columns => {
                 })
                 request.on('row', row => {
-                        results[index] = {
+                        let result = {
                             'firstName': row['FIRSTNAME'],
                             'lastName': row['LASTNAME'],
                             'otherName': row['OTHERNAMES'],
@@ -35,6 +35,7 @@ export default [
                             'dateOfBirth': row['DATEOFBIRTH'],
                             'gender': row['GENDER']
                         }
+                        results.push(result);
                         index += 1
                 });
                 request.on('error', err => {
