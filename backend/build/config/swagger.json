@@ -152,7 +152,7 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Edit User"
                 ],

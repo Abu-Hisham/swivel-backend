@@ -23,11 +23,11 @@ exports.default = [
                 request.stream = true;
                 request.query(`SELECT * FROM [TBCUSTOMERS]`);
                 let index = 1;
-                let results = {};
+                let results = [];
                 request.on('recordset', columns => {
                 });
                 request.on('row', row => {
-                    results[index] = {
+                    let result = {
                         'firstName': row['FIRSTNAME'],
                         'lastName': row['LASTNAME'],
                         'otherName': row['OTHERNAMES'],
@@ -39,6 +39,7 @@ exports.default = [
                         'dateOfBirth': row['DATEOFBIRTH'],
                         'gender': row['GENDER']
                     };
+                    results.push(result);
                     index += 1;
                 });
                 request.on('error', err => {
@@ -89,7 +90,7 @@ exports.default = [
     },
     {
         path: "/api/users/:id",
-        method: "put",
+        method: "post",
         handler: ((req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
                 var usr = new Authentication_1.Authentication();
