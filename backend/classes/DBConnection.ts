@@ -27,8 +27,8 @@ import { Authentication } from './Authentication';
 //         console.log('Connection Error', error); //val.replace(/\s{2,}/g, ' ')
 //     } else {
 //         var usr = new Authentication()
-//         var msg = new Contact()
-//         var ent = new Enterprise()
+//         // var msg = new Contact()
+//         // var ent = new Enterprise()
 //         // ent.corporate("Eclectic Int", "Abd    ul", "https://ekennya.co.ke", "hr@ekenya.co.ke", "070163301   6", "Nairobi").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)});
 //         // ent.corporate("Abdulaziz","Eclectics",  "https://ekeny.co.ke", "abdull@ekenya.co.ke", "0765223124", "Nairobi", "2000", "12.3").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)});
 //         // ent.corporateRequest("Eclectics", "Abdulaziz", "https://ekeny.co.ke", "abdull@ekenya.co.ke", "0765223124", "Nairobi","abdula@ekenya.co.ke").then((res)=>{console.log(res)})
@@ -37,7 +37,7 @@ import { Authentication } from './Authentication';
 //         // then((res)=>{console.log(res)}).
 //         // catch((err)=>{console.log(err)}));
 //         // usr.register("Abdulaziz","Mohd","Ra   jab","070163    3016","abdull@ekenya.co.ke", "Ke     nya","13-06-1993", "M", "Kenyan","336    72609","Zizahry@123", "Zizahry@123").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)});
-//         // usr.login("abduli@ekenya.co.ke", "Zizahry@123").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)})
+//         usr.login("abdull@ekenya.co.ke", "Zizahry@123").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)})
 //         // msg.contactForm("Abdul Aziz", "abdo@ekenya.co.ke", "My subject", "Here's my Message", "0710633018").then((res)=>{console.log(res)}).catch((err)=>{console.log(err)})
 //     }
 // })
